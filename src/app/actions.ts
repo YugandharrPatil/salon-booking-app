@@ -1,19 +1,21 @@
 "use server";
 
 import { supabase } from "@/lib/supabase";
-import { auth } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
 export async function createAppointment(data: { serviceId: string; stylistId: string; date: string; time: string }) {
-	const session = await auth();
-	const userId = session?.userId;
+	const user = await currentUser();
 
-	if (!userId) {
+	if (!user) {
 		throw new Error("Unauthorized");
 	}
 
+	const customerName = user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : user.username || user.emailAddresses[0]?.emailAddress || "Guest";
+
 	const { error } = await supabase.from("appointments").insert({
-		user_id: userId,
+		user_id: user.id,
+		customer_name: customerName,
 		service_id: data.serviceId,
 		stylist_id: data.stylistId,
 		date: data.date,
@@ -30,14 +32,13 @@ export async function createAppointment(data: { serviceId: string; stylistId: st
 }
 
 export async function deleteAppointment(id: string) {
-	const session = await auth();
-	const userId = session?.userId;
+	const user = await currentUser();
 
-	if (!userId) {
+	if (!user) {
 		throw new Error("Unauthorized");
 	}
 
-	const { error } = await supabase.from("appointments").delete().eq("id", id).eq("user_id", userId);
+	const { error } = await supabase.from("appointments").delete().eq("id", id).eq("user_id", user.id);
 
 	if (error) {
 		console.error("Failed to delete appointment:", error);

@@ -45,21 +45,27 @@ export const dummyServices = [
 
 export const dummyStylists = [
 	{
-		id: "st1",
-		name: "Alex Johnson",
+		id: "aarav_mehta",
+		username: "aarav_mehta",
+		name: "Aarav Mehta",
+		password: "clipper123",
 		image_url: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
 		service_ids: ["s1", "s2", "s6"],
 	},
 	{
-		id: "st2",
-		name: "Jordan Lee",
+		id: "rohan_kapoor",
+		username: "rohan_kapoor",
+		name: "Rohan Kapoor",
+		password: "style789",
 		image_url: "https://i.pravatar.cc/150?u=a042581f4e29026704d",
-		service_ids: ["s1", "s3", "s4", "s5"],
+		service_ids: ["s1", "s3", "s4"],
 	},
 	{
-		id: "st3",
-		name: "Casey Smith",
+		id: "neha_sharma",
+		username: "neha_sharma",
+		name: "Neha Sharma",
+		password: "salon456",
 		image_url: "https://i.pravatar.cc/150?u=a04258114e29026702d",
-		service_ids: ["s1", "s2", "s3", "s6"],
+		service_ids: ["s1", "s5", "s6"],
 	},
 ];

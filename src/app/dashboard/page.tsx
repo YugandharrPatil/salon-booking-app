@@ -1,13 +1,15 @@
 import { AppointmentList } from "@/components/AppointmentList";
 import { Button } from "@/components/ui/button";
+import { dummyStylists } from "@/lib/data";
 import { supabase } from "@/lib/supabase";
-import { auth } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
-	const session = await auth();
+	const user = await currentUser();
 
-	if (!session?.userId) {
+	if (!user) {
 		return (
 			<div className="min-h-screen bg-slate-50 flex flex-col">
 				<div className="container mx-auto px-4 py-12 text-center">
@@ -20,8 +22,13 @@ export default async function DashboardPage() {
 		);
 	}
 
+	const isStylist = user?.publicMetadata?.role === "stylist" || (user?.username ? dummyStylists.some((s) => s.username === user.username) : false);
+	if (isStylist) {
+		redirect("/stylist/dashboard");
+	}
+
 	// Fetch appointments from Supabase
-	const { data: appointments, error } = await supabase.from("appointments").select("*").eq("user_id", session.userId);
+	const { data: appointments, error } = await supabase.from("appointments").select("*").eq("user_id", user.id);
 
 	if (error && error.code !== "PGRST116") {
 		const errorMessage = error.message || JSON.stringify(error);
