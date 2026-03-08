@@ -3,25 +3,72 @@
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { dummyServices, dummyStylists } from "@/lib/data";
+import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { ArrowLeft, CalendarIcon, Clock, Scissors } from "lucide-react";
+import { ArrowLeft, CalendarIcon, Clock, Loader2, Scissors } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+interface Service {
+	id: string;
+	name: string;
+	description: string | null;
+	duration_minutes: number;
+	price: number;
+}
+
+interface Stylist {
+	id: string;
+	name: string;
+	image_url: string | null;
+	service_ids: string[];
+}
 
 export default function BookingPage() {
 	const params = useParams();
 	const router = useRouter();
 	const serviceId = params?.id as string;
 
-	const service = dummyServices.find((s) => s.id === serviceId);
-	const availableStylists = dummyStylists.filter((s) => s.service_ids.includes(serviceId));
+	const [service, setService] = useState<Service | null>(null);
+	const [availableStylists, setAvailableStylists] = useState<Stylist[]>([]);
+	const [isLoadingService, setIsLoadingService] = useState(true);
 
 	const [selectedStylist, setSelectedStylist] = useState<string | null>(null);
 	const [date, setDate] = useState<Date | undefined>(undefined);
 	const [selectedTime, setSelectedTime] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
+
+	useEffect(() => {
+		async function fetchServiceAndStylists() {
+			if (!serviceId) return;
+			setIsLoadingService(true);
+
+			// Fetch the service details
+			const { data: serviceData, error: serviceError } = await supabase.from("services").select("*").eq("id", serviceId).single();
+			if (!serviceError && serviceData) {
+				setService(serviceData as Service);
+			}
+
+			// Fetch stylists who provide this service using the array 'contains' operator
+			const { data: stylistsData, error: stylistsError } = await supabase.from("stylists").select("*").contains("service_ids", [serviceId]);
+			if (!stylistsError && stylistsData) {
+				setAvailableStylists(stylistsData as Stylist[]);
+			}
+
+			setIsLoadingService(false);
+		}
+		fetchServiceAndStylists();
+	}, [serviceId]);
+
+	if (isLoadingService) {
+		return (
+			<div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center">
+				<Loader2 className="w-8 h-8 animate-spin text-blue-500 mb-4" />
+				<p className="text-slate-600">Loading service details...</p>
+			</div>
+		);
+	}
 
 	if (!service) {
 		return (
@@ -72,21 +119,33 @@ export default function BookingPage() {
 					<div className="space-y-8">
 						<section>
 							<h2 className="text-2xl font-bold mb-4">1. Select a Stylist</h2>
-							<div className="grid sm:grid-cols-2 gap-4">
-								{availableStylists.map((stylist) => (
-									<div
-										key={stylist.id}
-										onClick={() => setSelectedStylist(stylist.id)}
-										className={cn("p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center gap-4", selectedStylist === stylist.id ? "border-blue-500 bg-blue-50" : "border-slate-200 hover:border-blue-200 bg-white")}
-									>
-										<img src={stylist.image_url} alt={stylist.name} className="w-12 h-12 rounded-full object-cover" />
-										<div>
-											<h4 className="font-semibold">{stylist.name}</h4>
-											<p className="text-sm text-slate-500 whitespace-nowrap overflow-hidden text-ellipsis">Expert in {service.name}</p>
+							{availableStylists.length === 0 ? (
+								<div className="p-6 bg-white border border-slate-200 rounded-xl text-center">
+									<p className="text-slate-500">No stylists are currently assigned to perform this service.</p>
+								</div>
+							) : (
+								<div className="grid sm:grid-cols-2 gap-4">
+									{availableStylists.map((stylist) => (
+										<div
+											key={stylist.id}
+											onClick={() => setSelectedStylist(stylist.id)}
+											className={cn("p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center gap-4", selectedStylist === stylist.id ? "border-blue-500 bg-blue-50" : "border-slate-200 hover:border-blue-200 bg-white")}
+										>
+											{stylist.image_url ? (
+												<img src={stylist.image_url} alt={stylist.name} className="w-12 h-12 rounded-full object-cover" />
+											) : (
+												<div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center">
+													<Scissors className="w-5 h-5 text-slate-400" />
+												</div>
+											)}
+											<div>
+												<h4 className="font-semibold">{stylist.name}</h4>
+												<p className="text-sm text-slate-500 whitespace-nowrap overflow-hidden text-ellipsis">Expert Stylist</p>
+											</div>
 										</div>
-									</div>
-								))}
-							</div>
+									))}
+								</div>
+							)}
 						</section>
 
 						<section className={cn("transition-opacity", !selectedStylist && "opacity-50 pointer-events-none")}>

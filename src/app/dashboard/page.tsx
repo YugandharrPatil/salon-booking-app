@@ -1,6 +1,5 @@
 import { AppointmentList } from "@/components/AppointmentList";
 import { Button } from "@/components/ui/button";
-import { dummyStylists } from "@/lib/data";
 import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -21,7 +20,7 @@ export default async function DashboardPage() {
 		);
 	}
 
-	const isStylist = user?.publicMetadata?.role === "stylist" || (user?.username ? dummyStylists.some((s) => s.username === user.username) : false);
+	const isStylist = user?.publicMetadata?.role === "stylist";
 	if (isStylist) {
 		redirect("/stylist/dashboard");
 	}

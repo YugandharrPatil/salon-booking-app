@@ -1,7 +1,9 @@
 import { ServiceCard } from "@/components/ServiceCard";
-import { dummyServices } from "@/lib/data";
+import { supabase } from "@/lib/supabase";
 
-export default function ServicesPage() {
+export default async function ServicesPage() {
+	const { data: services } = await supabase.from("services").select("*").order("name", { ascending: true });
+
 	return (
 		<div className="min-h-screen bg-slate-50">
 			<main className="container mx-auto px-4 py-12">
@@ -11,7 +13,7 @@ export default function ServicesPage() {
 				</div>
 
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-					{dummyServices.map((service) => (
+					{services?.map((service) => (
 						<ServiceCard key={service.id} service={service} />
 					))}
 				</div>

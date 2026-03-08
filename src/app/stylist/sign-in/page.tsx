@@ -4,11 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { dummyStylists } from "@/lib/data";
+import { supabase } from "@/lib/supabase";
 import { useClerk, useSignIn, useUser } from "@clerk/nextjs";
-import { Lock, User } from "lucide-react";
+import { Loader2, Lock, Scissors, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+
+interface Stylist {
+	id: string;
+	name: string;
+	image_url: string | null;
+	password: string | null;
+}
 
 export default function StylistSignIn() {
 	const { signIn } = useSignIn() as any;
@@ -20,9 +27,24 @@ export default function StylistSignIn() {
 	const [loading, setLoading] = useState(false);
 	const router = useRouter();
 
+	// Fetch stylists from DB for the autofill cards
+	const [stylists, setStylists] = useState<Stylist[]>([]);
+	const [isLoadingStylists, setIsLoadingStylists] = useState(true);
+
+	useEffect(() => {
+		async function fetchStylists() {
+			const { data, error } = await supabase.from("stylists").select("id, name, image_url, password").order("name", { ascending: true });
+			if (!error && data) {
+				setStylists(data as Stylist[]);
+			}
+			setIsLoadingStylists(false);
+		}
+		fetchStylists();
+	}, []);
+
 	useEffect(() => {
 		if (userLoaded && user) {
-			const isStylist = user.publicMetadata?.role === "stylist" || (user.username ? dummyStylists.some((s) => s.username === user.username) : false);
+			const isStylist = user.publicMetadata?.role === "stylist";
 			if (isStylist) {
 				router.push("/stylist/dashboard");
 			} else {
@@ -102,31 +124,48 @@ export default function StylistSignIn() {
 					</form>
 				</Card>
 
-				{/* Public Test Credentials */}
+				{/* Stylist Accounts from DB */}
 				<div className="space-y-6">
 					<div>
-						<h3 className="text-xl font-bold bg-clip-text text-transparent bg-linear-to-r from-blue-600 to-indigo-600 mb-2">Public Test Accounts</h3>
-						<p className="text-sm text-slate-600">Select one of the dummy stylist accounts below to test the portal flow.</p>
+						<h3 className="text-xl font-bold bg-clip-text text-transparent bg-linear-to-r from-blue-600 to-indigo-600 mb-2">Stylist Accounts</h3>
+						<p className="text-sm text-slate-600">Select a stylist account below to autofill credentials and test the portal flow.</p>
 					</div>
 
-					<div className="grid gap-4">
-						{dummyStylists.map((stylist) => (
-							<Card key={stylist.id} className="cursor-pointer hover:border-blue-300 transition-colors hover:bg-blue-50/50 group" onClick={() => autofill(stylist.username, stylist.password)}>
-								<div className="p-4 flex items-center justify-between">
-									<div className="flex items-center gap-3">
-										<img src={stylist.image_url} className="w-10 h-10 rounded-full object-cover border" alt={stylist.name} />
-										<div>
-											<p className="font-semibold">{stylist.name}</p>
-											<p className="text-xs text-slate-500 font-mono">user: {stylist.username}</p>
+					{isLoadingStylists ? (
+						<div className="flex items-center justify-center py-8">
+							<Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+						</div>
+					) : stylists.length === 0 ? (
+						<div className="text-center py-8 text-slate-400">
+							<Scissors className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+							<p className="text-sm">No stylists registered yet.</p>
+						</div>
+					) : (
+						<div className="grid gap-4">
+							{stylists.map((stylist) => (
+								<Card key={stylist.id} className="cursor-pointer hover:border-blue-300 transition-colors hover:bg-blue-50/50 group" onClick={() => autofill(stylist.id, stylist.password || "")}>
+									<div className="p-4 flex items-center justify-between">
+										<div className="flex items-center gap-3">
+											{stylist.image_url ? (
+												<img src={stylist.image_url} className="w-10 h-10 rounded-full object-cover border" alt={stylist.name} />
+											) : (
+												<div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center border">
+													<Scissors className="w-4 h-4 text-slate-400" />
+												</div>
+											)}
+											<div>
+												<p className="font-semibold">{stylist.name}</p>
+												<p className="text-xs text-slate-500 font-mono">user: {stylist.id}</p>
+											</div>
 										</div>
+										<Button variant="outline" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
+											Autofill
+										</Button>
 									</div>
-									<Button variant="outline" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
-										Autofill
-									</Button>
-								</div>
-							</Card>
-						))}
-					</div>
+								</Card>
+							))}
+						</div>
+					)}
 				</div>
 			</div>
 		</div>

@@ -1,5 +1,4 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { dummyServices, dummyStylists } from "@/lib/data";
 import { supabase } from "@/lib/supabase";
 import { currentUser } from "@clerk/nextjs/server";
 import { AlertCircle, CalendarIcon, ChevronLeft, Clock, Scissors, User } from "lucide-react";
@@ -13,7 +12,7 @@ export default async function AppointmentDetailsPage({ params }: { params: { id:
 		redirect("/stylist/sign-in");
 	}
 
-	const isStylist = user?.publicMetadata?.role === "stylist" || dummyStylists.some((s) => s.username === user.username);
+	const isStylist = user?.publicMetadata?.role === "stylist";
 	if (!isStylist) {
 		redirect("/dashboard");
 	}
@@ -41,7 +40,8 @@ export default async function AppointmentDetailsPage({ params }: { params: { id:
 		redirect("/stylist/dashboard");
 	}
 
-	const service = dummyServices.find((s) => s.id === appointment.service_id);
+	// Fetch service details from DB
+	const { data: service } = await supabase.from("services").select("*").eq("id", appointment.service_id).single();
 
 	return (
 		<div className="max-w-3xl mx-auto space-y-6">
@@ -94,15 +94,15 @@ export default async function AppointmentDetailsPage({ params }: { params: { id:
 							<h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">Service Breakdown</h3>
 							<div className="flex items-center gap-3">
 								<Scissors className="w-5 h-5 text-slate-400" />
-								<span className="font-medium text-slate-700">{service?.name}</span>
+								<span className="font-medium text-slate-700">{service?.name || "Unknown Service"}</span>
 							</div>
 							<div className="flex items-center justify-between border-t border-slate-200 pt-4 mt-4">
 								<span className="text-slate-500">Duration</span>
-								<span className="font-medium text-slate-900">{service?.duration_minutes} minutes</span>
+								<span className="font-medium text-slate-900">{service?.duration_minutes || "?"} minutes</span>
 							</div>
 							<div className="flex items-center justify-between border-t border-slate-200 pt-4">
 								<span className="text-slate-500">Price</span>
-								<span className="font-medium text-lg text-slate-900">${service?.price}</span>
+								<span className="font-medium text-lg text-slate-900">${service?.price || "?"}</span>
 							</div>
 						</div>
 					</div>

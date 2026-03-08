@@ -1,5 +1,4 @@
 import { StylistTabs } from "@/components/StylistTabs";
-import { dummyStylists } from "@/lib/data";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
@@ -11,7 +10,7 @@ export default async function StylistDashboardLayout({ children }: { children: R
 	}
 
 	// Verify they actually have the stylist role in publicMetadata
-	const isStylist = user?.publicMetadata?.role === "stylist" || (user?.username ? dummyStylists.some((s) => s.username === user.username) : false);
+	const isStylist = user?.publicMetadata?.role === "stylist";
 	if (!isStylist) {
 		redirect("/dashboard");
 	}

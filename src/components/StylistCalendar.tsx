@@ -1,6 +1,5 @@
 "use client";
 
-import { dummyServices } from "@/lib/data";
 import { supabase } from "@/lib/supabase";
 import { useQuery } from "@tanstack/react-query";
 import { format, getDay, parse, startOfWeek } from "date-fns";
@@ -24,10 +23,29 @@ const localizer = dateFnsLocalizer({
 	locales,
 });
 
+interface Service {
+	id: string;
+	name: string;
+	duration_minutes: number;
+}
+
 export function StylistCalendar({ username }: { username: string }) {
 	const router = useRouter();
 	const [view, setView] = useState<any>("week");
 	const [date, setDate] = useState(new Date());
+
+	// Fetch services lookup map
+	const { data: servicesMap } = useQuery({
+		queryKey: ["services-map"],
+		queryFn: async () => {
+			const { data } = await supabase.from("services").select("id, name, duration_minutes, price");
+			const map: Record<string, Service> = {};
+			(data || []).forEach((s: any) => {
+				map[s.id] = s;
+			});
+			return map;
+		},
+	});
 
 	const {
 		data: appointments,
@@ -46,7 +64,7 @@ export function StylistCalendar({ username }: { username: string }) {
 				start.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0);
 
 				const end = new Date(start);
-				const service = dummyServices.find((s) => s.id === apt.service_id);
+				const service = servicesMap?.[apt.service_id];
 				const duration = service?.duration_minutes || 45;
 				end.setMinutes(start.getMinutes() + duration);
 
@@ -59,6 +77,7 @@ export function StylistCalendar({ username }: { username: string }) {
 				};
 			});
 		},
+		enabled: !!servicesMap, // Only run after services are loaded
 	});
 
 	if (isLoading) {

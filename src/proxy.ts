@@ -1,23 +1,29 @@
-import { dummyStylists } from "@/lib/data";
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-const isProtectedRoute = createRouteMatcher(["/dashboard(.*)", "/stylist/dashboard(.*)"]);
 const isStylistSignIn = createRouteMatcher(["/stylist/sign-in(.*)"]);
+const isAdminSignIn = createRouteMatcher(["/admin/sign-in(.*)", "/admin/login(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
 	const currentAuth = await auth();
 
 	// Redirect already signed-in users away from the sign-in page
-	if (isStylistSignIn(req) && currentAuth.userId) {
+	if ((isStylistSignIn(req) || isAdminSignIn(req)) && currentAuth.userId) {
 		const sessionClaims = currentAuth.sessionClaims as any;
-		const isStylist = sessionClaims?.publicMetadata?.role === "stylist" || (sessionClaims?.username ? dummyStylists.some((s) => s.username === sessionClaims?.username) : false);
-		const redirectUrl = new URL(isStylist ? "/stylist/dashboard" : "/dashboard", req.url);
+
+		const isStylist = sessionClaims?.publicMetadata?.role === "stylist";
+		const isAdmin = sessionClaims?.publicMetadata?.role === "admin" || sessionClaims?.username === "johncarmack";
+
+		let targetRoute = "/dashboard";
+		if (isAdmin) targetRoute = "/admin/dashboard";
+		else if (isStylist) targetRoute = "/stylist/dashboard";
+
+		const redirectUrl = new URL(targetRoute, req.url);
 		return NextResponse.redirect(redirectUrl);
 	}
 
-	if (isProtectedRoute(req)) {
-		await auth.protect();
+	if (req.nextUrl.pathname.startsWith("/admin/login")) {
+		return NextResponse.redirect(new URL("/admin/sign-in", req.url));
 	}
 });
 

@@ -2,13 +2,31 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { dummyServices } from "@/lib/data";
 import { supabase } from "@/lib/supabase";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarIcon, Clock, Loader2, RefreshCw, User } from "lucide-react";
 import Link from "next/link";
 
+interface Service {
+	id: string;
+	name: string;
+	duration_minutes: number;
+}
+
 export function StylistAppointments({ username }: { username: string }) {
+	// Fetch services lookup map
+	const { data: servicesMap } = useQuery({
+		queryKey: ["services-map"],
+		queryFn: async () => {
+			const { data } = await supabase.from("services").select("id, name, duration_minutes, price");
+			const map: Record<string, Service> = {};
+			(data || []).forEach((s: any) => {
+				map[s.id] = s;
+			});
+			return map;
+		},
+	});
+
 	const {
 		data: appointments,
 		isLoading,
@@ -21,14 +39,20 @@ export function StylistAppointments({ username }: { username: string }) {
 			const { data, error } = await supabase.from("appointments").select("*").eq("stylist_id", username);
 			if (error && error.code !== "PGRST116") throw error;
 
-			return (data || []).map((apt: any) => ({
-				id: apt.id,
-				customerName: apt.customer_name || "Unknown Customer",
-				serviceId: apt.service_id,
-				date: apt.date,
-				time: apt.time,
-				status: apt.status,
-			}));
+			return (data || [])
+				.map((apt: any) => ({
+					id: apt.id,
+					customerName: apt.customer_name || "Unknown Customer",
+					serviceId: apt.service_id,
+					date: apt.date,
+					time: apt.time,
+					status: apt.status,
+				}))
+				.sort((a, b) => {
+					if (a.status === "pending" && b.status === "completed") return -1;
+					if (a.status === "completed" && b.status === "pending") return 1;
+					return 0;
+				});
 		},
 	});
 
@@ -63,14 +87,15 @@ export function StylistAppointments({ username }: { username: string }) {
 			) : (
 				<div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 					{appointments.map((apt) => {
-						const service = dummyServices.find((s) => s.id === apt.serviceId);
+						const service = servicesMap?.[apt.serviceId];
 
 						return (
 							<Link key={apt.id} href={`/stylist/dashboard/appointments/${apt.id}`} className="block">
-								<Card className="relative overflow-hidden border-t-4 border-t-blue-500 shadow-sm hover:shadow-md transition-shadow h-full">
+								<Card className={`relative overflow-hidden border-t-4 shadow-sm hover:shadow-md transition-shadow h-full ${apt.status === "completed" ? "border-t-slate-300 opacity-75" : "border-t-blue-500"}`}>
 									{apt.status === "pending" && <div className="absolute top-0 right-0 bg-amber-100 text-amber-800 text-xs font-semibold px-2 py-1 rounded-bl-lg z-10">Pending</div>}
+									{apt.status === "completed" && <div className="absolute top-0 right-0 bg-slate-200 text-slate-700 text-xs font-semibold px-2 py-1 rounded-bl-lg z-10">Completed</div>}
 									<CardHeader className="pb-3 border-b border-slate-50 bg-slate-50/50">
-										<CardTitle className="text-lg text-slate-800">{service?.name}</CardTitle>
+										<CardTitle className="text-lg text-slate-800">{service?.name || "Unknown Service"}</CardTitle>
 									</CardHeader>
 									<CardContent className="space-y-3 pt-4 bg-white">
 										<div className="flex items-center gap-3 text-slate-600">
@@ -84,7 +109,7 @@ export function StylistAppointments({ username }: { username: string }) {
 												<Clock className="w-4 h-4" />
 											</div>
 											<span className="font-medium text-slate-700">
-												{apt.time} ({service?.duration_minutes} mins)
+												{apt.time} ({service?.duration_minutes || "?"} mins)
 											</span>
 										</div>
 										<div className="flex items-center gap-3 text-slate-600">
