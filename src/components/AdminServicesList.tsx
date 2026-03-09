@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
+import { TABLES } from "@/lib/tables";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Clock, Edit2, Loader2, Plus, Scissors, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -40,7 +41,7 @@ export function AdminServicesList() {
 	} = useQuery({
 		queryKey: ["admin-services"],
 		queryFn: async () => {
-			const { data, error } = await supabase.from("services").select("*").order("name", { ascending: true });
+			const { data, error } = await supabase.from(TABLES.SERVICES).select("*").order("name", { ascending: true });
 			if (error && error.code !== "PGRST116") throw error;
 			return data as Service[];
 		},

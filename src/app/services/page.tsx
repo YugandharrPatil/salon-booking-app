@@ -1,8 +1,9 @@
 import { ServiceCard } from "@/components/ServiceCard";
 import { supabase } from "@/lib/supabase";
+import { TABLES } from "@/lib/tables";
 
 export default async function ServicesPage() {
-	const { data: services } = await supabase.from("services").select("*").order("name", { ascending: true });
+	const { data: services } = await supabase.from(TABLES.SERVICES).select("*").order("name", { ascending: true });
 
 	return (
 		<div className="min-h-screen bg-slate-50">

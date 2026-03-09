@@ -1,6 +1,7 @@
 "use server";
 
 import { supabase } from "@/lib/supabase";
+import { TABLES } from "@/lib/tables";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
@@ -13,7 +14,7 @@ export async function createAppointment(data: { serviceId: string; stylistId: st
 
 	const customerName = user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : user.username || user.emailAddresses[0]?.emailAddress || "Guest";
 
-	const { error } = await supabase.from("appointments").insert({
+	const { error } = await supabase.from(TABLES.APPOINTMENTS).insert({
 		user_id: user.id,
 		customer_name: customerName,
 		service_id: data.serviceId,
@@ -38,7 +39,7 @@ export async function deleteAppointment(id: string) {
 		throw new Error("Unauthorized");
 	}
 
-	const { error } = await supabase.from("appointments").delete().eq("id", id).eq("user_id", user.id);
+	const { error } = await supabase.from(TABLES.APPOINTMENTS).delete().eq("id", id).eq("user_id", user.id);
 
 	if (error) {
 		console.error("Failed to delete appointment:", error);
@@ -55,7 +56,7 @@ export async function completeAppointment(id: string) {
 		throw new Error("Unauthorized");
 	}
 
-	const { error } = await supabase.from("appointments").update({ status: "completed" }).eq("id", id).eq("user_id", user.id);
+	const { error } = await supabase.from(TABLES.APPOINTMENTS).update({ status: "completed" }).eq("id", id).eq("user_id", user.id);
 
 	if (error) {
 		console.error("Failed to complete appointment:", error);
@@ -70,7 +71,7 @@ export async function submitStylistReview(appointmentId: string, rating: number,
 	if (!user) throw new Error("Unauthorized");
 
 	const { error: updateError } = await supabase
-		.from("appointments")
+		.from(TABLES.APPOINTMENTS)
 		.update({
 			rating: rating,
 			review: review,
@@ -92,7 +93,7 @@ export async function createService(data: { name: string; description: string | 
 	const isAdmin = user.publicMetadata?.role === "admin" || user.username === "johncarmack";
 	if (!isAdmin) throw new Error("Forbidden");
 
-	const { error } = await supabase.from("services").insert({
+	const { error } = await supabase.from(TABLES.SERVICES).insert({
 		name: data.name,
 		description: data.description,
 		duration_minutes: data.duration_minutes,
@@ -116,7 +117,7 @@ export async function updateService(id: string, data: { name: string; descriptio
 	if (!isAdmin) throw new Error("Forbidden");
 
 	const { error } = await supabase
-		.from("services")
+		.from(TABLES.SERVICES)
 		.update({
 			name: data.name,
 			description: data.description,
@@ -141,7 +142,7 @@ export async function deleteService(id: string) {
 	const isAdmin = user.publicMetadata?.role === "admin" || user.username === "johncarmack";
 	if (!isAdmin) throw new Error("Forbidden");
 
-	const { error } = await supabase.from("services").delete().eq("id", id);
+	const { error } = await supabase.from(TABLES.SERVICES).delete().eq("id", id);
 
 	if (error) {
 		console.error("Failed to delete service:", error);
@@ -178,7 +179,7 @@ export async function createStylist(data: { username: string; name: string; pass
 	}
 
 	// 2. Insert the DB record using the username as id
-	const { error } = await supabase.from("stylists").insert({
+	const { error } = await supabase.from(TABLES.STYLISTS).insert({
 		id: data.username,
 		name: data.name,
 		password: data.password,
@@ -208,7 +209,7 @@ export async function updateStylist(id: string, data: { name: string; image_url:
 	if (!isAdmin) throw new Error("Forbidden");
 
 	const { error } = await supabase
-		.from("stylists")
+		.from(TABLES.STYLISTS)
 		.update({
 			name: data.name,
 			image_url: data.image_url,
@@ -231,7 +232,7 @@ export async function deleteStylist(id: string) {
 	if (!isAdmin) throw new Error("Forbidden");
 
 	// Delete from Supabase
-	const { error } = await supabase.from("stylists").delete().eq("id", id);
+	const { error } = await supabase.from(TABLES.STYLISTS).delete().eq("id", id);
 
 	if (error) {
 		console.error("Failed to delete stylist:", error);

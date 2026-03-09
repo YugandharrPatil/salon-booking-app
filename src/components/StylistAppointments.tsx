@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase";
+import { TABLES } from "@/lib/tables";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarIcon, Clock, Loader2, RefreshCw, User } from "lucide-react";
 import Link from "next/link";
@@ -18,7 +19,7 @@ export function StylistAppointments({ username }: { username: string }) {
 	const { data: servicesMap } = useQuery({
 		queryKey: ["services-map"],
 		queryFn: async () => {
-			const { data } = await supabase.from("services").select("id, name, duration_minutes, price");
+			const { data } = await supabase.from(TABLES.SERVICES).select("id, name, duration_minutes, price");
 			const map: Record<string, Service> = {};
 			(data || []).forEach((s: any) => {
 				map[s.id] = s;
@@ -36,7 +37,7 @@ export function StylistAppointments({ username }: { username: string }) {
 	} = useQuery({
 		queryKey: ["appointments", username],
 		queryFn: async () => {
-			const { data, error } = await supabase.from("appointments").select("*").eq("stylist_id", username);
+			const { data, error } = await supabase.from(TABLES.APPOINTMENTS).select("*").eq("stylist_id", username);
 			if (error && error.code !== "PGRST116") throw error;
 
 			return (data || [])

@@ -9,6 +9,7 @@ import { deleteAppointment } from "@/app/actions";
 import { ReviewDialog } from "@/components/ReviewDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { supabase } from "@/lib/supabase";
+import { TABLES } from "@/lib/tables";
 import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle, Loader2 } from "lucide-react";
@@ -48,7 +49,7 @@ export function AppointmentList() {
 	const { data: servicesMap } = useQuery({
 		queryKey: ["services-map"],
 		queryFn: async () => {
-			const { data } = await supabase.from("services").select("id, name, duration_minutes, price");
+			const { data } = await supabase.from(TABLES.SERVICES).select("id, name, duration_minutes, price");
 			const map: Record<string, Service> = {};
 			(data || []).forEach((s: any) => {
 				map[s.id] = s;
@@ -60,7 +61,7 @@ export function AppointmentList() {
 	const { data: stylistsMap } = useQuery({
 		queryKey: ["stylists-map"],
 		queryFn: async () => {
-			const { data } = await supabase.from("stylists").select("id, name, image_url");
+			const { data } = await supabase.from(TABLES.STYLISTS).select("id, name, image_url");
 			const map: Record<string, Stylist> = {};
 			(data || []).forEach((s: any) => {
 				map[s.id] = s;
@@ -77,7 +78,7 @@ export function AppointmentList() {
 		queryKey: ["client-appointments", user?.id],
 		enabled: !!user?.id,
 		queryFn: async () => {
-			const { data, error } = await supabase.from("appointments").select("*").eq("user_id", user?.id);
+			const { data, error } = await supabase.from(TABLES.APPOINTMENTS).select("*").eq("user_id", user?.id);
 			if (error && error.code !== "PGRST116") throw error;
 
 			return (data || [])

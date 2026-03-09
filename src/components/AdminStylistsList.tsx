@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
+import { TABLES } from "@/lib/tables";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Edit2, Loader2, Scissors, Trash2, UserPlus } from "lucide-react";
 import { useState } from "react";
@@ -46,7 +47,7 @@ export function AdminStylistsList() {
 	} = useQuery({
 		queryKey: ["admin-stylists"],
 		queryFn: async () => {
-			const { data, error } = await supabase.from("stylists").select("*").order("name", { ascending: true });
+			const { data, error } = await supabase.from(TABLES.STYLISTS).select("*").order("name", { ascending: true });
 			if (error && error.code !== "PGRST116") throw error;
 			return data as Stylist[];
 		},
@@ -56,7 +57,7 @@ export function AdminStylistsList() {
 	const { data: services } = useQuery({
 		queryKey: ["all-services"],
 		queryFn: async () => {
-			const { data, error } = await supabase.from("services").select("id, name").order("name", { ascending: true });
+			const { data, error } = await supabase.from(TABLES.SERVICES).select("id, name").order("name", { ascending: true });
 			if (error) throw error;
 			return data as Service[];
 		},
@@ -328,12 +329,7 @@ export function AdminStylistsList() {
 
 								<AlertDialog>
 									<AlertDialogTrigger asChild>
-										<Button
-											variant="ghost"
-											size="sm"
-											className="text-red-600 hover:bg-red-50 hover:text-red-700"
-											disabled={deleteMutation.isPending && deleteMutation.variables === stylist.id}
-										>
+										<Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50 hover:text-red-700" disabled={deleteMutation.isPending && deleteMutation.variables === stylist.id}>
 											{deleteMutation.isPending && deleteMutation.variables === stylist.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
 										</Button>
 									</AlertDialogTrigger>

@@ -1,21 +1,22 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase";
+import { TABLES } from "@/lib/tables";
 import { Scissors, Star } from "lucide-react";
 import Link from "next/link";
 
 export default async function StylistsPage() {
 	// Fetch all stylists
-	const { data: stylists } = await supabase.from("stylists").select("id, name, image_url, service_ids").order("name", { ascending: true });
+	const { data: stylists } = await supabase.from(TABLES.STYLISTS).select("id, name, image_url, service_ids").order("name", { ascending: true });
 
 	// Fetch all services for name lookup
-	const { data: services } = await supabase.from("services").select("id, name");
+	const { data: services } = await supabase.from(TABLES.SERVICES).select("id, name");
 	const servicesMap: Record<string, string> = {};
 	(services || []).forEach((s: any) => {
 		servicesMap[s.id] = s.name;
 	});
 
 	// Fetch average ratings for all stylists from appointments
-	const { data: ratings } = await supabase.from("appointments").select("stylist_id, rating").not("rating", "is", null);
+	const { data: ratings } = await supabase.from(TABLES.APPOINTMENTS).select("stylist_id, rating").not("rating", "is", null);
 	const ratingMap: Record<string, { total: number; count: number }> = {};
 	(ratings || []).forEach((r: any) => {
 		if (!ratingMap[r.stylist_id]) {

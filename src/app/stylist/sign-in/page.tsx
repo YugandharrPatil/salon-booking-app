@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
+import { TABLES } from "@/lib/tables";
 import { useClerk, useSignIn, useUser } from "@clerk/nextjs";
 import { Loader2, Lock, Scissors, User } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -33,7 +34,7 @@ export default function StylistSignIn() {
 
 	useEffect(() => {
 		async function fetchStylists() {
-			const { data, error } = await supabase.from("stylists").select("id, name, image_url, password").order("name", { ascending: true });
+			const { data, error } = await supabase.from(TABLES.STYLISTS).select("id, name, image_url, password").order("name", { ascending: true });
 			if (!error && data) {
 				setStylists(data as Stylist[]);
 			}

@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase";
+import { TABLES } from "@/lib/tables";
 import { ChevronLeft, MessageSquare, Scissors, Star } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -8,14 +9,14 @@ export default async function StylistProfilePage({ params }: { params: { id: str
 	const { id } = await params;
 
 	// Fetch stylist
-	const { data: stylist, error } = await supabase.from("stylists").select("id, name, image_url, service_ids").eq("id", id).single();
+	const { data: stylist, error } = await supabase.from(TABLES.STYLISTS).select("id, name, image_url, service_ids").eq("id", id).single();
 
 	if (error || !stylist) {
 		notFound();
 	}
 
 	// Fetch services for this stylist
-	const { data: allServices } = await supabase.from("services").select("id, name");
+	const { data: allServices } = await supabase.from(TABLES.SERVICES).select("id, name");
 	const servicesMap: Record<string, string> = {};
 	(allServices || []).forEach((s: any) => {
 		servicesMap[s.id] = s.name;
@@ -23,7 +24,7 @@ export default async function StylistProfilePage({ params }: { params: { id: str
 	const stylistServices = (stylist.service_ids || []).map((sid: string) => servicesMap[sid]).filter(Boolean);
 
 	// Fetch all reviews for this stylist (appointments with a rating)
-	const { data: reviews } = await supabase.from("appointments").select("id, rating, review, customer_name, date, service_id").eq("stylist_id", id).not("rating", "is", null).order("date", { ascending: false });
+	const { data: reviews } = await supabase.from(TABLES.APPOINTMENTS).select("id, rating, review, customer_name, date, service_id").eq("stylist_id", id).not("rating", "is", null).order("date", { ascending: false });
 
 	// Calculate average rating
 	const totalRating = (reviews || []).reduce((sum: number, r: any) => sum + (r.rating || 0), 0);

@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase";
+import { TABLES } from "@/lib/tables";
 import { currentUser } from "@clerk/nextjs/server";
 import { AlertCircle, CalendarIcon, ChevronLeft, Clock, Scissors, User } from "lucide-react";
 import Link from "next/link";
@@ -20,7 +21,7 @@ export default async function AppointmentDetailsPage({ params }: { params: { id:
 	const { id } = await params;
 
 	// Fetch appointment details
-	const { data: appointment, error } = await supabase.from("appointments").select("*").eq("id", id).single();
+	const { data: appointment, error } = await supabase.from(TABLES.APPOINTMENTS).select("*").eq("id", id).single();
 
 	if (error || !appointment) {
 		return (
@@ -41,7 +42,7 @@ export default async function AppointmentDetailsPage({ params }: { params: { id:
 	}
 
 	// Fetch service details from DB
-	const { data: service } = await supabase.from("services").select("*").eq("id", appointment.service_id).single();
+	const { data: service } = await supabase.from(TABLES.SERVICES).select("*").eq("id", appointment.service_id).single();
 
 	return (
 		<div className="max-w-3xl mx-auto space-y-6">

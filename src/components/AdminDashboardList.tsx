@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase";
+import { TABLES } from "@/lib/tables";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarIcon, Clock, Loader2, RefreshCw, Scissors, User } from "lucide-react";
 
@@ -33,7 +34,7 @@ export function AdminDashboardList() {
 	const { data: servicesMap } = useQuery({
 		queryKey: ["services-map"],
 		queryFn: async () => {
-			const { data } = await supabase.from("services").select("id, name, duration_minutes, price");
+			const { data } = await supabase.from(TABLES.SERVICES).select("id, name, duration_minutes, price");
 			const map: Record<string, Service> = {};
 			(data || []).forEach((s: any) => {
 				map[s.id] = s;
@@ -45,7 +46,7 @@ export function AdminDashboardList() {
 	const { data: stylistsMap } = useQuery({
 		queryKey: ["stylists-map"],
 		queryFn: async () => {
-			const { data } = await supabase.from("stylists").select("id, name, image_url");
+			const { data } = await supabase.from(TABLES.STYLISTS).select("id, name, image_url");
 			const map: Record<string, Stylist> = {};
 			(data || []).forEach((s: any) => {
 				map[s.id] = s;
@@ -64,7 +65,7 @@ export function AdminDashboardList() {
 		queryKey: ["admin-all-appointments"],
 		queryFn: async () => {
 			// Super admin: No .eq filter, pulls everything
-			const { data, error } = await supabase.from("appointments").select("*").order("date", { ascending: true });
+			const { data, error } = await supabase.from(TABLES.APPOINTMENTS).select("*").order("date", { ascending: true });
 			if (error && error.code !== "PGRST116") throw error;
 
 			return (data || []).map((apt: any) => ({

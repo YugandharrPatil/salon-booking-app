@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase";
+import { TABLES } from "@/lib/tables";
 import { useQuery } from "@tanstack/react-query";
 import { format, getDay, parse, startOfWeek } from "date-fns";
 import { enUS } from "date-fns/locale";
@@ -38,7 +39,7 @@ export function StylistCalendar({ username }: { username: string }) {
 	const { data: servicesMap } = useQuery({
 		queryKey: ["services-map"],
 		queryFn: async () => {
-			const { data } = await supabase.from("services").select("id, name, duration_minutes, price");
+			const { data } = await supabase.from(TABLES.SERVICES).select("id, name, duration_minutes, price");
 			const map: Record<string, Service> = {};
 			(data || []).forEach((s: any) => {
 				map[s.id] = s;
@@ -54,7 +55,7 @@ export function StylistCalendar({ username }: { username: string }) {
 	} = useQuery({
 		queryKey: ["appointments", username],
 		queryFn: async () => {
-			const { data, error } = await supabase.from("appointments").select("*").eq("stylist_id", username);
+			const { data, error } = await supabase.from(TABLES.APPOINTMENTS).select("*").eq("stylist_id", username);
 			if (error && error.code !== "PGRST116") throw error;
 
 			return (data || []).map((apt: any) => {

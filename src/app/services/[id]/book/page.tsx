@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase";
+import { TABLES } from "@/lib/tables";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ArrowLeft, CalendarIcon, Clock, Loader2, Scissors } from "lucide-react";
@@ -45,13 +46,13 @@ export default function BookingPage() {
 			setIsLoadingService(true);
 
 			// Fetch the service details
-			const { data: serviceData, error: serviceError } = await supabase.from("services").select("*").eq("id", serviceId).single();
+			const { data: serviceData, error: serviceError } = await supabase.from(TABLES.SERVICES).select("*").eq("id", serviceId).single();
 			if (!serviceError && serviceData) {
 				setService(serviceData as Service);
 			}
 
 			// Fetch stylists who provide this service using the array 'contains' operator
-			const { data: stylistsData, error: stylistsError } = await supabase.from("stylists").select("*").contains("service_ids", [serviceId]);
+			const { data: stylistsData, error: stylistsError } = await supabase.from(TABLES.STYLISTS).select("*").contains("service_ids", [serviceId]);
 			if (!stylistsError && stylistsData) {
 				setAvailableStylists(stylistsData as Stylist[]);
 			}
