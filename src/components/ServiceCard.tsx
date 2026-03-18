@@ -7,7 +7,7 @@ interface ServiceProps {
 	service: {
 		id: string;
 		name: string;
-		description: string;
+		description: string | null;
 		duration_minutes: number;
 		price: number;
 		image_url?: string | null;
@@ -20,7 +20,7 @@ export function ServiceCard({ service }: ServiceProps) {
 			{service.image_url ? (
 				<div className="h-48 w-full bg-slate-100 relative">
 					<img src={service.image_url} alt={service.name} className="w-full h-full object-cover" />
-					<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+					<div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/60 to-transparent p-4">
 						<h3 className="text-xl font-bold text-white shadow-sm">{service.name}</h3>
 					</div>
 				</div>

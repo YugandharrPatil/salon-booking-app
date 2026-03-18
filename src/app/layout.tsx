@@ -1,4 +1,4 @@
-import { Navbar } from "@/components/Navbar";
+import Navbar from "@/components/Navbar";
 import { Providers } from "@/components/Providers";
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";

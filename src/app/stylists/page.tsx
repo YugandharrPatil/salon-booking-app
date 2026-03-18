@@ -8,22 +8,26 @@ export default async function StylistsPage() {
 	// Fetch all stylists
 	const { data: stylists } = await supabase.from(TABLES.STYLISTS).select("id, name, image_url, service_ids").order("name", { ascending: true });
 
-	// Fetch all services for name lookup
+	// Fetch all services for names
 	const { data: services } = await supabase.from(TABLES.SERVICES).select("id, name");
+
 	const servicesMap: Record<string, string> = {};
-	(services || []).forEach((s: any) => {
+	(services || []).forEach((s) => {
 		servicesMap[s.id] = s.name;
 	});
 
 	// Fetch average ratings for all stylists from appointments
 	const { data: ratings } = await supabase.from(TABLES.APPOINTMENTS).select("stylist_id, rating").not("rating", "is", null);
+
 	const ratingMap: Record<string, { total: number; count: number }> = {};
-	(ratings || []).forEach((r: any) => {
-		if (!ratingMap[r.stylist_id]) {
-			ratingMap[r.stylist_id] = { total: 0, count: 0 };
+	(ratings || []).forEach((r) => {
+		if (r.rating !== null) {
+			if (!ratingMap[r.stylist_id]) {
+				ratingMap[r.stylist_id] = { total: 0, count: 0 };
+			}
+			ratingMap[r.stylist_id].total += r.rating;
+			ratingMap[r.stylist_id].count += 1;
 		}
-		ratingMap[r.stylist_id].total += r.rating;
-		ratingMap[r.stylist_id].count += 1;
 	});
 
 	return (
@@ -42,16 +46,16 @@ export default async function StylistsPage() {
 					</div>
 				) : (
 					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-						{stylists.map((stylist: any) => {
+						{stylists.map((stylist) => {
 							const avgRating = ratingMap[stylist.id] ? (ratingMap[stylist.id].total / ratingMap[stylist.id].count).toFixed(1) : null;
 							const reviewCount = ratingMap[stylist.id]?.count || 0;
-							const serviceNames = (stylist.service_ids || []).map((id: string) => servicesMap[id]).filter(Boolean);
+							const serviceNames = (stylist.service_ids || []).map((id) => servicesMap[id]).filter(Boolean);
 
 							return (
 								<Link key={stylist.id} href={`/stylists/${stylist.id}`} className="block group">
 									<Card className="flex flex-col h-full overflow-hidden hover:shadow-lg transition-all duration-300 group-hover:border-blue-200">
 										{/* Avatar section */}
-										<div className="relative h-52 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+										<div className="relative h-52 bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
 											{stylist.image_url ? (
 												<img src={stylist.image_url} alt={stylist.name} className="w-28 h-28 rounded-full object-cover border-4 border-white shadow-lg group-hover:scale-105 transition-transform duration-300" />
 											) : (
@@ -77,7 +81,7 @@ export default async function StylistsPage() {
 											{/* Services */}
 											{serviceNames.length > 0 && (
 												<div className="flex flex-wrap gap-1.5 justify-center">
-													{serviceNames.slice(0, 3).map((name: string) => (
+													{serviceNames.slice(0, 3).map((name) => (
 														<span key={name} className="bg-blue-50 text-blue-700 text-xs px-2.5 py-1 rounded-full font-medium">
 															{name}
 														</span>

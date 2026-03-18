@@ -4,11 +4,11 @@ import Link from "next/link";
 
 export default function Home() {
 	return (
-		<div className="min-h-screen bg-slate-50 flex flex-col">
+		<div className="min-h-screen flex flex-col">
 			<main className="flex-1">
 				{/* Hero Section */}
-				<section className="relative py-20 overflow-hidden">
-					<div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-slate-800 -z-10" />
+				<section className="relative py-20 overflow-hidden z-0">
+					<div className="absolute inset-0 bg-linear-to-br from-slate-900 to-slate-400 -z-10" />
 					<div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-20 mix-blend-overlay -z-10" />
 
 					<div className="container mx-auto px-4 flex flex-col items-center text-center">

@@ -53,7 +53,7 @@ export function StylistCalendar({ username }: { username: string }) {
 		isLoading,
 		error,
 	} = useQuery({
-		queryKey: ["appointments", username],
+		queryKey: ["calendar-appointments", username],
 		queryFn: async () => {
 			const { data, error } = await supabase.from(TABLES.APPOINTMENTS).select("*").eq("stylist_id", username);
 			if (error && error.code !== "PGRST116") throw error;
@@ -95,7 +95,7 @@ export function StylistCalendar({ username }: { username: string }) {
 	}
 
 	return (
-		<div className="h-[600px] bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+		<div className="h-150 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
 			<Calendar
 				localizer={localizer}
 				events={appointments || []}

@@ -78,7 +78,7 @@ export function AppointmentList() {
 		queryKey: ["client-appointments", user?.id],
 		enabled: !!user?.id,
 		queryFn: async () => {
-			const { data, error } = await supabase.from(TABLES.APPOINTMENTS).select("*").eq("user_id", user?.id);
+			const { data, error } = await supabase.from(TABLES.APPOINTMENTS).select("*").eq("user_id", user?.id || "");
 			if (error && error.code !== "PGRST116") throw error;
 
 			return (data || [])

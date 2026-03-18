@@ -22,5 +22,23 @@ export default async function StylistDashboardPage() {
 		redirect("/dashboard");
 	}
 
-	return <StylistAppointments username={username} />;
+	return (
+		<div className="min-h-screen bg-slate-50 flex flex-col">
+			<main className="flex-1 container mx-auto px-4 py-8 max-w-5xl">
+				<div className="mb-6 border-b pb-6">
+					<div className="flex justify-between items-center mb-4">
+						<h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-3">
+							<span className="bg-blue-100 text-blue-800 p-2 rounded-lg text-sm uppercase tracking-widest font-bold">Stylist Portal</span>
+							Welcome, {user.firstName || username}
+						</h1>
+					</div>
+					<p className="text-slate-500 mt-2">Manage your schedule and upcoming appointments.</p>
+				</div>
+
+				<div className="mt-6">
+					<StylistAppointments username={username} />
+				</div>
+			</main>
+		</div>
+	);
 }

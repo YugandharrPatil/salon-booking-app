@@ -2,7 +2,7 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 const isStylistSignIn = createRouteMatcher(["/stylist/sign-in(.*)"]);
-const isAdminSignIn = createRouteMatcher(["/admin/sign-in(.*)", "/admin/login(.*)"]);
+const isAdminSignIn = createRouteMatcher(["/admin/sign-in(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
 	const currentAuth = await auth();
@@ -20,10 +20,6 @@ export default clerkMiddleware(async (auth, req) => {
 
 		const redirectUrl = new URL(targetRoute, req.url);
 		return NextResponse.redirect(redirectUrl);
-	}
-
-	if (req.nextUrl.pathname.startsWith("/admin/login")) {
-		return NextResponse.redirect(new URL("/admin/sign-in", req.url));
 	}
 });
 
