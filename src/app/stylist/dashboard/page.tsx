@@ -1,4 +1,4 @@
-import { StylistAppointments } from "@/components/StylistAppointments";
+import { StylistAppointments } from "@/components/stylist-appointments";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 

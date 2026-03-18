@@ -1,5 +1,5 @@
-import Navbar from "@/components/Navbar";
-import { Providers } from "@/components/Providers";
+import Navbar from "@/components/navbar";
+import { Providers } from "@/components/providers";
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";

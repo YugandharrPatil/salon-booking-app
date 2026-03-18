@@ -6,7 +6,7 @@ import { CalendarIcon, Clock, Scissors, X } from "lucide-react";
 import Link from "next/link";
 
 import { deleteAppointment } from "@/app/actions";
-import { ReviewDialog } from "@/components/ReviewDialog";
+import { ReviewDialog } from "@/components/review-dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { supabase } from "@/lib/supabase";
 import { TABLES } from "@/lib/tables";

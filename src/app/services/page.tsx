@@ -1,4 +1,4 @@
-import { ServiceCard } from "@/components/ServiceCard";
+import { ServiceCard } from "@/components/service-card";
 import { supabase } from "@/lib/supabase";
 import { TABLES } from "@/lib/tables";
 

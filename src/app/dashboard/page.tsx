@@ -1,4 +1,4 @@
-import { AppointmentList } from "@/components/AppointmentList";
+import { AppointmentList } from "@/components/appointment-list";
 import { Button } from "@/components/ui/button";
 import { SignInButton } from "@clerk/nextjs";
 import { currentUser } from "@clerk/nextjs/server";

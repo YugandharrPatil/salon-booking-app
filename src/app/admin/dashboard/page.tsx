@@ -1,4 +1,4 @@
-import { AdminDashboardList } from "@/components/AdminDashboardList";
+import { AdminDashboardList } from "@/components/admin-dashboard-list";
 import { Button } from "@/components/ui/button";
 import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";

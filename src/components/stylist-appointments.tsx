@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { StylistCalendar } from "@/components/StylistCalendar";
+import { StylistCalendar } from "@/components/stylist-calendar";
 import { supabase } from "@/lib/supabase";
 import { TABLES } from "@/lib/tables";
 import { useQuery } from "@tanstack/react-query";

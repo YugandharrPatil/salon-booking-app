@@ -1,4 +1,4 @@
-import { AdminStylistsList } from "@/components/AdminStylistsList";
+import { AdminStylistsList } from "@/components/admin-stylists-list";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
