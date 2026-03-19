@@ -28,7 +28,7 @@ export default async function AppointmentDetailsPage({ params }: { params: { id:
 			<div className="min-h-[50vh] flex flex-col items-center justify-center space-y-4">
 				<AlertCircle className="w-12 h-12 text-red-500" />
 				<h2 className="text-2xl font-bold text-slate-900">Appointment Not Found</h2>
-				<p className="text-slate-500">The requested appointment could not be found or you don't have access to it.</p>
+				<p className="text-slate-500">The requested appointment could not be found or you don&apos;t have access to it.</p>
 				<Link href="/stylist/dashboard" className="text-blue-600 hover:underline">
 					Return to Dashboard
 				</Link>
@@ -37,7 +37,7 @@ export default async function AppointmentDetailsPage({ params }: { params: { id:
 	}
 
 	// Double check that the stylist actually owns this appointment
-	if (appointment.stylist_id !== user.username) {
+	if (appointment.stylist_id.toLowerCase() !== user.username.toLowerCase()) {
 		redirect("/stylist/dashboard");
 	}
 

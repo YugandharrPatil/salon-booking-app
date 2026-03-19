@@ -55,7 +55,7 @@ export function StylistCalendar({ username }: { username: string }) {
 	} = useQuery({
 		queryKey: ["calendar-appointments", username],
 		queryFn: async () => {
-			const { data, error } = await supabase.from(TABLES.APPOINTMENTS).select("*").eq("stylist_id", username);
+			const { data, error } = await supabase.from(TABLES.APPOINTMENTS).select("*").ilike("stylist_id", username);
 			if (error && error.code !== "PGRST116") throw error;
 
 			return (data || []).map((apt: any) => {

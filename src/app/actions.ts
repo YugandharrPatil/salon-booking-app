@@ -178,9 +178,9 @@ export async function createStylist(data: { username: string; name: string; pass
 		throw new Error(msg);
 	}
 
-	// 2. Insert the DB record using the username as id
+	// 2. Insert the DB record using the username as id (always lowercased to match Clerk's username normalization)
 	const { error } = await supabase.from(TABLES.STYLISTS).insert({
-		id: data.username,
+		id: data.username.toLowerCase(),
 		name: data.name,
 		password: data.password,
 		image_url: data.image_url,
