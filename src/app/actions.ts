@@ -90,7 +90,7 @@ export async function createService(data: { name: string; description: string | 
 	const user = await currentUser();
 	if (!user) throw new Error("Unauthorized");
 
-	const isAdmin = user.publicMetadata?.role === "admin" || user.username === "johncarmack";
+	const isAdmin = user.publicMetadata?.role === "admin";
 	if (!isAdmin) throw new Error("Forbidden");
 
 	const { error } = await supabase.from(TABLES.SERVICES).insert({
@@ -113,7 +113,7 @@ export async function updateService(id: string, data: { name: string; descriptio
 	const user = await currentUser();
 	if (!user) throw new Error("Unauthorized");
 
-	const isAdmin = user.publicMetadata?.role === "admin" || user.username === "johncarmack";
+	const isAdmin = user.publicMetadata?.role === "admin";
 	if (!isAdmin) throw new Error("Forbidden");
 
 	const { error } = await supabase
@@ -139,7 +139,7 @@ export async function deleteService(id: string) {
 	const user = await currentUser();
 	if (!user) throw new Error("Unauthorized");
 
-	const isAdmin = user.publicMetadata?.role === "admin" || user.username === "johncarmack";
+	const isAdmin = user.publicMetadata?.role === "admin";
 	if (!isAdmin) throw new Error("Forbidden");
 
 	const { error } = await supabase.from(TABLES.SERVICES).delete().eq("id", id);
@@ -156,7 +156,7 @@ export async function createStylist(data: { username: string; name: string; pass
 	const user = await currentUser();
 	if (!user) throw new Error("Unauthorized");
 
-	const isAdmin = user.publicMetadata?.role === "admin" || user.username === "johncarmack";
+	const isAdmin = user.publicMetadata?.role === "admin";
 	if (!isAdmin) throw new Error("Forbidden");
 
 	// 1. Create the Clerk user with `stylist` role
@@ -205,7 +205,7 @@ export async function updateStylist(id: string, data: { name: string; image_url:
 	const user = await currentUser();
 	if (!user) throw new Error("Unauthorized");
 
-	const isAdmin = user.publicMetadata?.role === "admin" || user.username === "johncarmack";
+	const isAdmin = user.publicMetadata?.role === "admin";
 	if (!isAdmin) throw new Error("Forbidden");
 
 	const { error } = await supabase
@@ -228,7 +228,7 @@ export async function deleteStylist(id: string) {
 	const user = await currentUser();
 	if (!user) throw new Error("Unauthorized");
 
-	const isAdmin = user.publicMetadata?.role === "admin" || user.username === "johncarmack";
+	const isAdmin = user.publicMetadata?.role === "admin";
 	if (!isAdmin) throw new Error("Forbidden");
 
 	// Delete from Supabase

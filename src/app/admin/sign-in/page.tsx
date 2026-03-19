@@ -31,16 +31,16 @@ export default function AdminSignInPage() {
 	const [isLoading, setIsLoading] = useState(false);
 
 	// Redirect if already signed in and an admin
-	useEffect(() => {
-		if (isLoaded && isSignedIn && user) {
-			const isAdmin = user.publicMetadata?.role === "admin" || user.username === "johncarmack";
-			if (isAdmin) {
-				router.push("/admin/dashboard");
-			} else {
-				router.push("/dashboard");
-			}
-		}
-	}, [isLoaded, isSignedIn, user, router]);
+	// useEffect(() => {
+	// 	if (isLoaded && isSignedIn && user) {
+	// 		const isAdmin = user.publicMetadata?.role === "admin";
+	// 		if (isAdmin) {
+	// 			router.push("/admin/dashboard");
+	// 		} else {
+	// 			router.push("/dashboard");
+	// 		}
+	// 	}
+	// }, [isLoaded, isSignedIn, user, router]);
 
 	const handleSignIn = async (e: React.FormEvent) => {
 		e.preventDefault();

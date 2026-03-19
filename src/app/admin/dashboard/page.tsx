@@ -1,31 +1,6 @@
 import { AdminDashboardList } from "@/components/admin-dashboard-list";
-import { Button } from "@/components/ui/button";
-import { currentUser } from "@clerk/nextjs/server";
-import Link from "next/link";
-import { redirect } from "next/navigation";
 
 export default async function AdminDashboardPage() {
-	const user = await currentUser();
-
-	if (!user) {
-		return (
-			<div className="min-h-screen bg-slate-50 flex flex-col">
-				<div className="container mx-auto px-4 py-12 text-center">
-					<h2 className="text-2xl font-bold mb-4">You need to sign in to access the Admin Portal</h2>
-					<Button asChild>
-						<Link href="/admin/sign-in">Admin Sign In</Link>
-					</Button>
-				</div>
-			</div>
-		);
-	}
-
-	const isAdmin = user.publicMetadata?.role === "admin" || user.username === "johncarmack";
-
-	if (!isAdmin) {
-		redirect("/dashboard");
-	}
-
 	return (
 		<div className="min-h-screen bg-slate-50 flex flex-col">
 			<main className="flex-1 container mx-auto px-4 py-8 max-w-6xl">
