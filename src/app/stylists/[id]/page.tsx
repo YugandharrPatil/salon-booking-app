@@ -5,6 +5,8 @@ import { ChevronLeft, MessageSquare, Scissors, Star } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 export default async function StylistProfilePage({ params }: { params: { id: string } }) {
 	const { id } = await params;
 

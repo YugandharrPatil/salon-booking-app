@@ -4,6 +4,8 @@ import { TABLES } from "@/lib/tables";
 import { Scissors, Star } from "lucide-react";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export default async function StylistsPage() {
 	// Fetch all stylists
 	const { data: stylists } = await supabase.from(TABLES.STYLISTS).select("id, name, image_url, service_ids").order("name", { ascending: true });

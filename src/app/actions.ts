@@ -199,6 +199,7 @@ export async function createStylist(data: { username: string; name: string; pass
 	}
 
 	revalidatePath("/admin/stylists");
+	revalidatePath("/stylists");
 }
 
 export async function updateStylist(id: string, data: { name: string; image_url: string | null; service_ids: string[] }) {
@@ -222,6 +223,7 @@ export async function updateStylist(id: string, data: { name: string; image_url:
 		throw new Error("Could not update stylist.");
 	}
 	revalidatePath("/admin/stylists");
+	revalidatePath("/stylists");
 }
 
 export async function deleteStylist(id: string) {
@@ -252,4 +254,5 @@ export async function deleteStylist(id: string) {
 	}
 
 	revalidatePath("/admin/stylists");
+	revalidatePath("/stylists");
 }
