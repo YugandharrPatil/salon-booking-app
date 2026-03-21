@@ -12,7 +12,7 @@ export async function createAppointment(data: { serviceId: string; stylistId: st
 		throw new Error("Unauthorized");
 	}
 
-	const customerName = user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : user.username || user.emailAddresses[0]?.emailAddress || "Guest";
+	const customerName = user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : user.username || user.emailAddresses[0]?.emailAddress || "Guest"; // TODO: Guest cannot access this page
 
 	const { error } = await supabase.from(TABLES.APPOINTMENTS).insert({
 		user_id: user.id,
