@@ -8,8 +8,10 @@ import { TABLES } from "@/lib/tables";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ArrowLeft, CalendarIcon, Clock, Loader2, Scissors } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 
 interface Service {
 	id: string;
@@ -31,38 +33,36 @@ export default function BookingPage() {
 	const router = useRouter();
 	const serviceId = params?.id as string;
 
-	const [service, setService] = useState<Service | null>(null);
-	const [availableStylists, setAvailableStylists] = useState<Stylist[]>([]);
-	const [isLoadingService, setIsLoadingService] = useState(true);
+	const {
+		handleSubmit,
+		formState: { isSubmitting },
+	} = useForm();
 
 	const [selectedStylist, setSelectedStylist] = useState<string | null>(null);
 	const [date, setDate] = useState<Date | undefined>(undefined);
 	const [selectedTime, setSelectedTime] = useState<string | null>(null);
-	const [isSubmitting, setIsSubmitting] = useState(false);
 
-	useEffect(() => {
-		async function fetchServiceAndStylists() {
-			if (!serviceId) return;
-			setIsLoadingService(true);
+	const { data: service, isLoading: isLoadingService } = useQuery({
+		queryKey: ["service", serviceId],
+		queryFn: async () => {
+			const { data, error } = await supabase.from(TABLES.SERVICES).select("*").eq("id", serviceId).single();
+			if (error) throw error;
+			return data as Service;
+		},
+		enabled: !!serviceId,
+	});
 
-			// Fetch the service details
-			const { data: serviceData, error: serviceError } = await supabase.from(TABLES.SERVICES).select("*").eq("id", serviceId).single();
-			if (!serviceError && serviceData) {
-				setService(serviceData as Service);
-			}
+	const { data: availableStylists = [], isLoading: isLoadingStylists } = useQuery({
+		queryKey: ["stylistsForService", serviceId],
+		queryFn: async () => {
+			const { data, error } = await supabase.from(TABLES.STYLISTS).select("*").contains("service_ids", [serviceId]);
+			if (error) throw error;
+			return data as Stylist[];
+		},
+		enabled: !!serviceId,
+	});
 
-			// Fetch stylists who provide this service using the array 'contains' operator
-			const { data: stylistsData, error: stylistsError } = await supabase.from(TABLES.STYLISTS).select("*").contains("service_ids", [serviceId]);
-			if (!stylistsError && stylistsData) {
-				setAvailableStylists(stylistsData as Stylist[]);
-			}
-
-			setIsLoadingService(false);
-		}
-		fetchServiceAndStylists();
-	}, [serviceId]);
-
-	if (isLoadingService) {
+	if (isLoadingService || isLoadingStylists) {
 		return (
 			<div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center">
 				<Loader2 className="w-8 h-8 animate-spin text-blue-500 mb-4" />
@@ -84,13 +84,11 @@ export default function BookingPage() {
 	// Generate some dummy timeslots
 	const timeSlots = ["09:00 AM", "10:00 AM", "11:00 AM", "01:00 PM", "02:00 PM", "03:30 PM", "04:30 PM"];
 
-	const handleBooking = async () => {
+	const onSubmit = async () => {
 		// Basic validation
 		if (!selectedStylist || !date || !selectedTime) return;
 
 		try {
-			setIsSubmitting(true);
-
 			// Added dynamic import to avoid potential component mounting issues
 			const { createAppointment } = await import("@/app/actions");
 
@@ -105,7 +103,6 @@ export default function BookingPage() {
 			router.refresh();
 		} catch (error) {
 			console.error(error);
-			setIsSubmitting(false);
 		}
 	};
 
@@ -116,7 +113,7 @@ export default function BookingPage() {
 					<ArrowLeft className="w-4 h-4 mr-2" /> Back to Services
 				</Button>
 
-				<div className="grid md:grid-cols-[1fr_350px] gap-8">
+				<form onSubmit={handleSubmit(onSubmit)} className="grid md:grid-cols-[1fr_350px] gap-8">
 					<div className="space-y-8">
 						<section>
 							<h2 className="text-2xl font-bold mb-4">1. Select a Stylist</h2>
@@ -163,7 +160,7 @@ export default function BookingPage() {
 									<label className="block text-sm font-medium mb-2">Available Times</label>
 									<div className="grid grid-cols-2 gap-2">
 										{timeSlots.map((time) => (
-											<Button key={time} variant={selectedTime === time ? "default" : "outline"} className={cn("w-full", selectedTime === time && "bg-blue-600 hover:bg-blue-700")} onClick={() => setSelectedTime(time)}>
+											<Button key={time} type="button" variant={selectedTime === time ? "default" : "outline"} className={cn("w-full", selectedTime === time && "bg-blue-600 hover:bg-blue-700")} onClick={() => setSelectedTime(time)}>
 												<Clock className="w-4 h-4 mr-2" />
 												{time}
 											</Button>
@@ -205,13 +202,13 @@ export default function BookingPage() {
 								</div>
 							</CardContent>
 							<CardFooter className="bg-slate-50 rounded-b-xl border-t p-6">
-								<Button className="w-full h-12 text-base" disabled={!selectedStylist || !date || !selectedTime || isSubmitting} onClick={handleBooking}>
+								<Button type="submit" className="w-full h-12 text-base" disabled={!selectedStylist || !date || !selectedTime || isSubmitting}>
 									{isSubmitting ? "Confirming..." : "Confirm Appointment"}
 								</Button>
 							</CardFooter>
 						</Card>
 					</div>
-				</div>
+				</form>
 			</main>
 		</div>
 	);

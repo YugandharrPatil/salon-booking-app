@@ -7,7 +7,11 @@
 		"build": "next build",
 		"start": "next start",
 		"lint": "eslint",
-		"generateTypes": "supabase gen types typescript --project-id \"eprnldbxuhqtxkjzvxbx\" --schema public > src/types/database.types.ts"
+		"generateTypes": "supabase gen types typescript --project-id \"eprnldbxuhqtxkjzvxbx\" --schema public > src/types/database.types.ts",
+		"db:generate": "drizzle-kit generate",
+		"db:pull": "drizzle-kit pull",
+		"db:push": "drizzle-kit push",
+		"db:migrate": "drizzle-kit migrate"
 	},
 	"dependencies": {
 		"@clerk/nextjs": "^7.0.1",
@@ -18,8 +22,10 @@
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"date-fns": "^4.1.0",
+		"drizzle-orm": "^0.45.2",
 		"lucide-react": "^0.577.0",
 		"next": "16.1.6",
+		"postgres": "^3.4.8",
 		"radix-ui": "^1.4.3",
 		"react": "19.2.3",
 		"react-big-calendar": "^1.19.4",
@@ -35,6 +41,8 @@
 		"@types/react": "^19",
 		"@types/react-dom": "^19",
 		"babel-plugin-react-compiler": "1.0.0",
+		"dotenv": "^17.3.1",
+		"drizzle-kit": "^0.31.10",
 		"eslint": "^9",
 		"eslint-config-next": "16.1.6",
 		"shadcn": "^3.8.5",

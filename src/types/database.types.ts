@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      agency_messages: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: number
+          message: string | null
+          name: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: number
+          message?: string | null
+          name?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: number
+          message?: string | null
+          name?: string | null
+        }
+        Relationships: []
+      }
+      agency_projects: {
+        Row: {
+          created_at: string
+          demo_video: string | null
+          id: number
+          repo: string | null
+        }
+        Insert: {
+          created_at?: string
+          demo_video?: string | null
+          id?: number
+          repo?: string | null
+        }
+        Update: {
+          created_at?: string
+          demo_video?: string | null
+          id?: number
+          repo?: string | null
+        }
+        Relationships: []
+      }
       pet_addresses: {
         Row: {
           city: string
@@ -53,7 +98,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "addresses_user_id_fkey"
+            foreignKeyName: "pet_addresses_user_id_pet_users_id_fk"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "pet_users"
@@ -82,13 +127,43 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "pet_carts_user_id_fkey"
+            foreignKeyName: "pet_carts_user_id_pet_users_id_fk"
             columns: ["user_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "pet_users"
             referencedColumns: ["id"]
           },
         ]
+      }
+      pet_messages: {
+        Row: {
+          created_at: string
+          email: string
+          first_name: string
+          id: number
+          last_name: string
+          message: string
+          subject: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          first_name: string
+          id?: number
+          last_name: string
+          message: string
+          subject: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: number
+          last_name?: string
+          message?: string
+          subject?: string
+        }
+        Relationships: []
       }
       pet_order_items: {
         Row: {
@@ -114,14 +189,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "order_items_order_id_fkey"
+            foreignKeyName: "pet_order_items_order_id_pet_orders_id_fk"
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "pet_orders"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "order_items_product_id_fkey"
+            foreignKeyName: "pet_order_items_product_id_pet_products_id_fk"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "pet_products"
@@ -144,7 +219,7 @@ export type Database = {
           id?: string
           shipping_address: Json
           shipping_cost?: number
-          status?: string
+          status: string
           total_amount: number
           user_id: string
         }
@@ -159,7 +234,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "orders_user_id_fkey"
+            foreignKeyName: "pet_orders_user_id_pet_users_id_fk"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "pet_users"
@@ -576,6 +651,265 @@ export type Database = {
           name?: string
           password?: string | null
           service_ids?: string[] | null
+        }
+        Relationships: []
+      }
+      taas_bookings: {
+        Row: {
+          accepted_at: string | null
+          address: string
+          client_id: string
+          completed_by_client: boolean | null
+          completed_by_technician: boolean | null
+          created_at: string | null
+          id: string
+          lead_closed: boolean | null
+          lead_contacted: boolean | null
+          negotiated_date_time: string | null
+          negotiated_price: number | null
+          preferred_date_time: string
+          problem_description: string
+          service_type: string
+          status: string | null
+          technician_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          address: string
+          client_id: string
+          completed_by_client?: boolean | null
+          completed_by_technician?: boolean | null
+          created_at?: string | null
+          id?: string
+          lead_closed?: boolean | null
+          lead_contacted?: boolean | null
+          negotiated_date_time?: string | null
+          negotiated_price?: number | null
+          preferred_date_time: string
+          problem_description: string
+          service_type: string
+          status?: string | null
+          technician_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          address?: string
+          client_id?: string
+          completed_by_client?: boolean | null
+          completed_by_technician?: boolean | null
+          created_at?: string | null
+          id?: string
+          lead_closed?: boolean | null
+          lead_contacted?: boolean | null
+          negotiated_date_time?: string | null
+          negotiated_price?: number | null
+          preferred_date_time?: string
+          problem_description?: string
+          service_type?: string
+          status?: string | null
+          technician_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taas_bookings_client_id_taas_users_id_fk"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "taas_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "taas_bookings_technician_id_taas_technicians_id_fk"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "taas_technicians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      taas_chats: {
+        Row: {
+          booking_id: string
+          created_at: string | null
+          id: string
+          message: string
+          offer_date_time: string | null
+          offer_price: number | null
+          sender_id: string
+          sender_type: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string | null
+          id?: string
+          message: string
+          offer_date_time?: string | null
+          offer_price?: number | null
+          sender_id: string
+          sender_type: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string | null
+          id?: string
+          message?: string
+          offer_date_time?: string | null
+          offer_price?: number | null
+          sender_id?: string
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taas_chats_booking_id_taas_bookings_id_fk"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "taas_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      taas_reviews: {
+        Row: {
+          booking_id: string
+          client_id: string
+          created_at: string | null
+          id: string
+          reviewee_id: string
+          reviewer_id: string
+          stars: number
+          technician_id: string
+          text: string | null
+        }
+        Insert: {
+          booking_id: string
+          client_id: string
+          created_at?: string | null
+          id?: string
+          reviewee_id: string
+          reviewer_id: string
+          stars: number
+          technician_id: string
+          text?: string | null
+        }
+        Update: {
+          booking_id?: string
+          client_id?: string
+          created_at?: string | null
+          id?: string
+          reviewee_id?: string
+          reviewer_id?: string
+          stars?: number
+          technician_id?: string
+          text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taas_reviews_booking_id_taas_bookings_id_fk"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "taas_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "taas_reviews_technician_id_taas_technicians_id_fk"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "taas_technicians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      taas_technicians: {
+        Row: {
+          bio: string
+          cities: string[] | null
+          created_at: string | null
+          embedding: Json | null
+          id: string
+          is_visible: boolean | null
+          job_types: string[]
+          name: string
+          photo_url: string | null
+          rating_avg: number | null
+          rating_count: number | null
+          tags: string[] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          bio: string
+          cities?: string[] | null
+          created_at?: string | null
+          embedding?: Json | null
+          id?: string
+          is_visible?: boolean | null
+          job_types: string[]
+          name: string
+          photo_url?: string | null
+          rating_avg?: number | null
+          rating_count?: number | null
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          bio?: string
+          cities?: string[] | null
+          created_at?: string | null
+          embedding?: Json | null
+          id?: string
+          is_visible?: boolean | null
+          job_types?: string[]
+          name?: string
+          photo_url?: string | null
+          rating_avg?: number | null
+          rating_count?: number | null
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taas_technicians_user_id_taas_users_id_fk"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "taas_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      taas_users: {
+        Row: {
+          created_at: string | null
+          display_name: string | null
+          email: string
+          id: string
+          rating_avg: number | null
+          rating_count: number | null
+          role: string | null
+          roles: string[] | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_name?: string | null
+          email: string
+          id: string
+          rating_avg?: number | null
+          rating_count?: number | null
+          role?: string | null
+          roles?: string[] | null
+        }
+        Update: {
+          created_at?: string | null
+          display_name?: string | null
+          email?: string
+          id?: string
+          rating_avg?: number | null
+          rating_count?: number | null
+          role?: string | null
+          roles?: string[] | null
         }
         Relationships: []
       }
