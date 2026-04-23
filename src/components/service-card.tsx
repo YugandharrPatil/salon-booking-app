@@ -3,16 +3,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Clock, DollarSign } from "lucide-react";
 import Link from "next/link";
 
-interface ServiceProps {
-	service: {
-		id: string;
-		name: string;
-		description: string | null;
-		duration_minutes: number;
-		price: number;
-		image_url?: string | null;
-	};
-}
+import { Tables } from "@/types/database.types";
+
+type Service = Tables<"salon_services">;
+
+type ServiceProps = {
+	service: Service;
+};
 
 export function ServiceCard({ service }: ServiceProps) {
 	return (

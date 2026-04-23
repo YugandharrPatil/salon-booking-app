@@ -3,13 +3,21 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useClerk, useUser } from "@clerk/nextjs";
+import { useClerk } from "@clerk/nextjs";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import { AlertCircle, ArrowRight, Loader2, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import * as z from "zod";
+
+const formSchema = z.object({
+	username: z.string().min(1, { message: "Username is required" }),
+	password: z.string().min(1, { message: "Password is required" }),
+});
 
 // Single admin credential for autofill
 const ADMIN_CREDENTIALS = {
@@ -23,55 +31,42 @@ const ADMIN_CREDENTIALS = {
 export default function AdminSignInPage() {
 	const router = useRouter();
 	const clerk = useClerk();
-	const { isLoaded, isSignedIn, user } = useUser();
 
-	const [username, setUsername] = useState("");
-	const [password, setPassword] = useState("");
-	const [error, setError] = useState("");
-	const [isLoading, setIsLoading] = useState(false);
+	const form = useForm<z.infer<typeof formSchema>>({
+		resolver: zodResolver(formSchema),
+		defaultValues: {
+			username: "",
+			password: "",
+		},
+	});
 
-	// Redirect if already signed in and an admin
-	// useEffect(() => {
-	// 	if (isLoaded && isSignedIn && user) {
-	// 		const isAdmin = user.publicMetadata?.role === "admin";
-	// 		if (isAdmin) {
-	// 			router.push("/admin/dashboard");
-	// 		} else {
-	// 			router.push("/dashboard");
-	// 		}
-	// 	}
-	// }, [isLoaded, isSignedIn, user, router]);
-
-	const handleSignIn = async (e: React.FormEvent) => {
-		e.preventDefault();
-		setError("");
-		setIsLoading(true);
-
-		try {
+	const signInMutation = useMutation({
+		mutationFn: async (values: z.infer<typeof formSchema>) => {
 			const result = await clerk.client.signIn.create({
-				identifier: username,
-				password: password,
+				identifier: values.username,
+				password: values.password,
 			});
-
+			return result;
+		},
+		onSuccess: async (result) => {
 			if (result.status === "complete") {
 				await clerk.setActive({ session: result.createdSessionId });
 				router.push("/admin/dashboard");
 			} else {
 				console.error("SignIn Status:", result.status);
-				setError(`Sign in incomplete. Status is: ${result.status}. Check Clerk dashboard settings.`);
+				throw new Error(`Sign in incomplete. Status is: ${result.status}. Check Clerk dashboard settings.`);
 			}
-		} catch (err: any) {
-			console.error(err);
-			setError(err.errors?.[0]?.longMessage || err.message || "Invalid admin credentials");
-		} finally {
-			setIsLoading(false);
-		}
+		},
+	});
+
+	const onSubmit = (values: z.infer<typeof formSchema>) => {
+		signInMutation.mutate(values);
 	};
 
 	// Function to quickly fill in the test credentials
 	const fillCredentials = () => {
-		setUsername(ADMIN_CREDENTIALS.username);
-		setPassword(ADMIN_CREDENTIALS.password);
+		form.setValue("username", ADMIN_CREDENTIALS.username);
+		form.setValue("password", ADMIN_CREDENTIALS.password);
 	};
 
 	return (
@@ -91,27 +86,43 @@ export default function AdminSignInPage() {
 							<CardTitle>Sign in to your account</CardTitle>
 							<CardDescription>Enter your designated admin credentials</CardDescription>
 						</CardHeader>
-						<form onSubmit={handleSignIn}>
+						<form onSubmit={form.handleSubmit(onSubmit)}>
 							<CardContent className="space-y-4">
-								{error && (
+								{signInMutation.error && (
 									<Alert variant="destructive" className="bg-red-50 text-red-900 border-red-200">
 										<AlertCircle className="h-4 w-4" />
 										<AlertTitle>Error</AlertTitle>
-										<AlertDescription>{error}</AlertDescription>
+										<AlertDescription>{(signInMutation.error as any).errors?.[0]?.longMessage || signInMutation.error.message || "Invalid admin credentials"}</AlertDescription>
 									</Alert>
 								)}
-								<div className="space-y-2">
-									<Label htmlFor="username">Username</Label>
-									<Input id="username" type="text" placeholder="e.g. johncarmack" required value={username} onChange={(e) => setUsername(e.target.value)} disabled={isLoading} />
-								</div>
-								<div className="space-y-2">
-									<Label htmlFor="password">Password</Label>
-									<Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading} />
-								</div>
+								<FieldGroup>
+									<Controller
+										name="username"
+										control={form.control}
+										render={({ field, fieldState }) => (
+											<Field data-invalid={fieldState.invalid}>
+												<FieldLabel htmlFor="username">Username</FieldLabel>
+												<Input id="username" type="text" placeholder="e.g. johncarmack" disabled={signInMutation.isPending} aria-invalid={fieldState.invalid} {...field} />
+												{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+											</Field>
+										)}
+									/>
+									<Controller
+										name="password"
+										control={form.control}
+										render={({ field, fieldState }) => (
+											<Field data-invalid={fieldState.invalid}>
+												<FieldLabel htmlFor="password">Password</FieldLabel>
+												<Input id="password" type="password" disabled={signInMutation.isPending} aria-invalid={fieldState.invalid} {...field} />
+												{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+											</Field>
+										)}
+									/>
+								</FieldGroup>
 							</CardContent>
 							<CardFooter className="flex flex-col space-y-4">
-								<Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
-									{isLoading ? (
+								<Button type="submit" className="w-full" disabled={signInMutation.isPending}>
+									{signInMutation.isPending ? (
 										<>
 											<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 											Authenticating...

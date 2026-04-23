@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { SignInButton } from "@clerk/nextjs";
 import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
 	const user = await currentUser();
@@ -21,11 +20,6 @@ export default async function DashboardPage() {
 				</div>
 			</div>
 		);
-	}
-
-	const isStylist = user?.publicMetadata?.role === "stylist";
-	if (isStylist) {
-		redirect("/stylist/dashboard");
 	}
 
 	return (

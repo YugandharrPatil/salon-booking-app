@@ -76,7 +76,7 @@ export default async function StylistsPage() {
 
 										<CardHeader className="text-center pb-2">
 											<h3 className="text-xl font-bold text-slate-800 group-hover:text-blue-700 transition-colors">{stylist.name}</h3>
-											<p className="text-sm text-slate-500 font-mono">@{stylist.id}</p>
+											{/* <p className="text-sm text-slate-500 font-mono">@{stylist.id}</p> */}
 										</CardHeader>
 
 										<CardContent className="grow space-y-3 pt-0">

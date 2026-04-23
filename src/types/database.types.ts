@@ -632,6 +632,7 @@ export type Database = {
       }
       salon_stylists: {
         Row: {
+          description: string | null
           id: string
           image_url: string | null
           name: string
@@ -639,6 +640,7 @@ export type Database = {
           service_ids: string[] | null
         }
         Insert: {
+          description?: string | null
           id: string
           image_url?: string | null
           name: string
@@ -646,6 +648,7 @@ export type Database = {
           service_ids?: string[] | null
         }
         Update: {
+          description?: string | null
           id?: string
           image_url?: string | null
           name?: string

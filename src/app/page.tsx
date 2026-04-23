@@ -18,7 +18,7 @@ export default function Home() {
 						</div>
 
 						<h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-6 max-w-4xl">
-							Elevate Your Style with <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">LuxeSalon</span>
+							Elevate Your Style with <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-emerald-400">LuxeSalon</span>
 						</h1>
 
 						<p className="text-lg md:text-xl text-slate-300 max-w-2xl mb-10 leading-relaxed">Book your next appointment effortlessly. Discover top-rated stylists, modern trends, and a seamless booking experience tailored to you.</p>

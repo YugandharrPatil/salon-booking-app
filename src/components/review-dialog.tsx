@@ -1,23 +1,23 @@
 "use client";
 
-import { submitStylistReview } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { submitStylistReview } from "@/lib/actions/user";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Star } from "lucide-react";
 import { useState } from "react";
 
-interface ReviewDialogProps {
+type ReviewDialogProps = {
 	appointmentId: string;
-	stylistId: string;
+	stylistId?: string;
 	stylistName: string;
 	isOpen: boolean;
 	onClose: () => void;
-}
+};
 
-export function ReviewDialog({ appointmentId, stylistId, stylistName, isOpen, onClose }: ReviewDialogProps) {
+export default function ReviewDialog({ appointmentId, stylistName, isOpen, onClose }: ReviewDialogProps) {
 	const [rating, setRating] = useState<number>(5);
 	const [review, setReview] = useState<string>("");
 	const queryClient = useQueryClient();
@@ -45,7 +45,7 @@ export function ReviewDialog({ appointmentId, stylistId, stylistName, isOpen, on
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onClose}>
-			<DialogContent className="sm:max-w-[425px]">
+			<DialogContent className="sm:max-w-106.25 ">
 				<form onSubmit={handleSubmit}>
 					<DialogHeader>
 						<DialogTitle>Leave a Review</DialogTitle>
@@ -79,7 +79,7 @@ export function ReviewDialog({ appointmentId, stylistId, stylistName, isOpen, on
 						<Button type="button" variant="outline" onClick={onClose} disabled={reviewMutation.isPending}>
 							Cancel
 						</Button>
-						<Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={reviewMutation.isPending}>
+						<Button type="submit" disabled={reviewMutation.isPending}>
 							{reviewMutation.isPending ? (
 								<>
 									<Loader2 className="mr-2 h-4 w-4 animate-spin" />

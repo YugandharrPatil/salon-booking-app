@@ -5,9 +5,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { CalendarIcon, Clock, Scissors, X } from "lucide-react";
 import Link from "next/link";
 
-import { deleteAppointment } from "@/app/actions";
-import { ReviewDialog } from "@/components/review-dialog";
+import ReviewDialog from "@/components/review-dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { deleteAppointment } from "@/lib/actions/user";
 import { supabase } from "@/lib/supabase";
 import { TABLES } from "@/lib/tables";
 import { useUser } from "@clerk/nextjs";
@@ -15,27 +15,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle, Loader2 } from "lucide-react";
 import { useState } from "react";
 
-interface Appointment {
-	id: string;
-	serviceId: string;
-	stylistId: string;
-	date: string;
-	time: string;
-	status: string;
-}
+import { Tables } from "@/types/database.types";
 
-interface Service {
-	id: string;
-	name: string;
-	duration_minutes: number;
-	price: number;
-}
-
-interface Stylist {
-	id: string;
-	name: string;
-	image_url: string | null;
-}
+type Appointment = Tables<"salon_appointments">;
+type Service = Tables<"salon_services">;
+type Stylist = Tables<"salon_stylists">;
 
 export function AppointmentList() {
 	const { user } = useUser();
@@ -49,9 +33,9 @@ export function AppointmentList() {
 	const { data: servicesMap } = useQuery({
 		queryKey: ["services-map"],
 		queryFn: async () => {
-			const { data } = await supabase.from(TABLES.SERVICES).select("id, name, duration_minutes, price");
+			const { data } = await supabase.from(TABLES.SERVICES).select("*");
 			const map: Record<string, Service> = {};
-			(data || []).forEach((s: any) => {
+			(data || []).forEach((s) => {
 				map[s.id] = s;
 			});
 			return map;
@@ -61,9 +45,9 @@ export function AppointmentList() {
 	const { data: stylistsMap } = useQuery({
 		queryKey: ["stylists-map"],
 		queryFn: async () => {
-			const { data } = await supabase.from(TABLES.STYLISTS).select("id, name, image_url");
+			const { data } = await supabase.from(TABLES.STYLISTS).select("*");
 			const map: Record<string, Stylist> = {};
-			(data || []).forEach((s: any) => {
+			(data || []).forEach((s) => {
 				map[s.id] = s;
 			});
 			return map;
@@ -78,23 +62,17 @@ export function AppointmentList() {
 		queryKey: ["client-appointments", user?.id],
 		enabled: !!user?.id,
 		queryFn: async () => {
-			const { data, error } = await supabase.from(TABLES.APPOINTMENTS).select("*").eq("user_id", user?.id || "");
+			const { data, error } = await supabase
+				.from(TABLES.APPOINTMENTS)
+				.select("*")
+				.eq("user_id", user?.id || "");
 			if (error && error.code !== "PGRST116") throw error;
 
-			return (data || [])
-				.map((apt: any) => ({
-					id: apt.id,
-					serviceId: apt.service_id,
-					stylistId: apt.stylist_id,
-					date: apt.date,
-					time: apt.time,
-					status: apt.status,
-				}))
-				.sort((a, b) => {
-					if (a.status === "pending" && b.status === "completed") return -1;
-					if (a.status === "completed" && b.status === "pending") return 1;
-					return 0;
-				});
+			return ((data || []) as Appointment[]).sort((a, b) => {
+				if (a.status === "pending" && b.status === "completed") return -1;
+				if (a.status === "completed" && b.status === "pending") return 1;
+				return 0;
+			});
 		},
 	});
 
@@ -139,8 +117,8 @@ export function AppointmentList() {
 	return (
 		<div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 			{appointments.map((apt: Appointment) => {
-				const service = servicesMap?.[apt.serviceId];
-				const stylist = stylistsMap?.[apt.stylistId];
+				const service = servicesMap?.[apt.service_id];
+				const stylist = stylistsMap?.[apt.stylist_id];
 
 				return (
 					<Card key={apt.id} className={`relative overflow-hidden border-t-4 shadow-sm hover:shadow-md transition-shadow ${apt.status === "completed" ? "border-t-slate-300 opacity-75" : "border-t-emerald-500"}`}>
@@ -184,7 +162,7 @@ export function AppointmentList() {
 									disabled={deleteMutation.isPending}
 									onClick={() => {
 										setReviewAppointmentId(apt.id);
-										setReviewStylistId(apt.stylistId);
+										setReviewStylistId(apt.stylist_id);
 										setReviewStylistName(stylist?.name || "Stylist");
 									}}
 								>
@@ -193,12 +171,12 @@ export function AppointmentList() {
 								</Button>
 								<AlertDialog>
 									<AlertDialogTrigger asChild>
-										<Button variant="ghost" size="sm" className="flex-1 font-medium text-slate-500 hover:text-red-700 hover:bg-red-50" disabled={deleteMutation.isPending}>
+										<Button variant="outline" size="sm" className="flex-1 font-medium bg-white hover:bg-red-50 hover:text-red-500 border-red-200" disabled={deleteMutation.isPending}>
 											{deleteMutation.isPending && deleteMutation.variables === apt.id ? (
 												<Loader2 className="w-3 h-3 mr-2 animate-spin" />
 											) : (
 												<>
-													<X className="w-3 h-3 mr-2" />
+													<X className="w-3 h-3 mr-2 text-red-500" />
 													Cancel
 												</>
 											)}

@@ -6,38 +6,21 @@ import { supabase } from "@/lib/supabase";
 import { TABLES } from "@/lib/tables";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarIcon, Clock, Loader2, RefreshCw, Scissors, User } from "lucide-react";
+import type { Tables } from "@/types/database.types";
 
-interface Appointment {
-	id: string;
-	serviceId: string;
-	stylistId: string;
-	customerName: string;
-	date: string;
-	time: string;
-	status: string;
-}
-
-interface Service {
-	id: string;
-	name: string;
-	duration_minutes: number;
-}
-
-interface Stylist {
-	id: string;
-	name: string;
-	image_url: string | null;
-}
+type Appointment = Tables<"salon_appointments">;
+type Service = Tables<"salon_services">;
+type Stylist = Tables<"salon_stylists">;
 
 export function AdminDashboardList() {
 	// Fetch services and stylists lookup maps
 	const { data: servicesMap } = useQuery({
 		queryKey: ["services-map"],
 		queryFn: async () => {
-			const { data } = await supabase.from(TABLES.SERVICES).select("id, name, duration_minutes, price");
+			const { data } = await supabase.from(TABLES.SERVICES).select("*");
 			const map: Record<string, Service> = {};
-			(data || []).forEach((s: any) => {
-				map[s.id] = s;
+			(data || []).forEach((s) => {
+				map[s.id] = s as Service;
 			});
 			return map;
 		},
@@ -46,10 +29,10 @@ export function AdminDashboardList() {
 	const { data: stylistsMap } = useQuery({
 		queryKey: ["stylists-map"],
 		queryFn: async () => {
-			const { data } = await supabase.from(TABLES.STYLISTS).select("id, name, image_url");
+			const { data } = await supabase.from(TABLES.STYLISTS).select("*");
 			const map: Record<string, Stylist> = {};
-			(data || []).forEach((s: any) => {
-				map[s.id] = s;
+			(data || []).forEach((s) => {
+				map[s.id] = s as Stylist;
 			});
 			return map;
 		},
@@ -68,15 +51,7 @@ export function AdminDashboardList() {
 			const { data, error } = await supabase.from(TABLES.APPOINTMENTS).select("*").order("date", { ascending: true });
 			if (error && error.code !== "PGRST116") throw error;
 
-			return (data || []).map((apt: any) => ({
-				id: apt.id,
-				serviceId: apt.service_id,
-				stylistId: apt.stylist_id,
-				customerName: apt.customer_name || "Unknown Customer",
-				date: apt.date,
-				time: apt.time,
-				status: apt.status,
-			}));
+			return (data || []) as Appointment[];
 		},
 	});
 
@@ -117,8 +92,8 @@ export function AdminDashboardList() {
 
 			<div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
 				{allAppointments.map((apt: Appointment) => {
-					const service = servicesMap?.[apt.serviceId];
-					const stylist = stylistsMap?.[apt.stylistId];
+					const service = servicesMap?.[apt.service_id];
+					const stylist = stylistsMap?.[apt.stylist_id];
 
 					return (
 						<Card key={apt.id} className={`relative overflow-hidden border-t-4 shadow-sm hover:shadow-lg transition-all duration-300 ${apt.status === "completed" ? "border-t-slate-300 opacity-75" : "border-t-blue-600"}`}>
@@ -164,7 +139,7 @@ export function AdminDashboardList() {
 									</div>
 									<div>
 										<p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">Assigned Client</p>
-										<span className="font-bold text-slate-900">{apt.customerName}</span>
+										<span className="font-bold text-slate-900">{apt.customer_name || "Unknown Customer"}</span>
 									</div>
 								</div>
 							</CardContent>

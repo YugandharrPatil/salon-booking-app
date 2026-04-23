@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase";
 import { TABLES } from "@/lib/tables";
@@ -20,7 +21,7 @@ export default async function StylistProfilePage({ params }: { params: { id: str
 	// Fetch services for this stylist
 	const { data: allServices } = await supabase.from(TABLES.SERVICES).select("id, name");
 	const servicesMap: Record<string, string> = {};
-	(allServices || []).forEach((s: any) => {
+	(allServices || []).forEach((s) => {
 		servicesMap[s.id] = s.name;
 	});
 	const stylistServices = (stylist.service_ids || []).map((sid: string) => servicesMap[sid]).filter(Boolean);
@@ -29,7 +30,7 @@ export default async function StylistProfilePage({ params }: { params: { id: str
 	const { data: reviews } = await supabase.from(TABLES.APPOINTMENTS).select("id, rating, review, customer_name, date, service_id").eq("stylist_id", id).not("rating", "is", null).order("date", { ascending: false });
 
 	// Calculate average rating
-	const totalRating = (reviews || []).reduce((sum: number, r: any) => sum + (r.rating || 0), 0);
+	const totalRating = (reviews || []).reduce((sum: number, r) => sum + (r.rating || 0), 0);
 	const reviewCount = (reviews || []).length;
 	const avgRating = reviewCount > 0 ? totalRating / reviewCount : 0;
 
@@ -42,14 +43,17 @@ export default async function StylistProfilePage({ params }: { params: { id: str
 		<div className="min-h-screen bg-slate-50">
 			<main className="container mx-auto px-4 py-12 max-w-4xl">
 				{/* Back link */}
-				<Link href="/stylists" className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors mb-8">
-					<ChevronLeft className="w-4 h-4 mr-1" />
-					Back to Stylists
-				</Link>
+
+				<Button asChild variant="link">
+					<Link href="/stylists" className="mb-8">
+						<ChevronLeft className="w-4 h-4 mr-1" />
+						Back to Stylists
+					</Link>
+				</Button>
 
 				{/* Stylist Profile Header */}
 				<Card className="overflow-hidden mb-8">
-					<div className="relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 pt-12 pb-16 flex flex-col items-center">
+					<div className="relative bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50 pt-12 pb-16 flex flex-col items-center">
 						{stylist.image_url ? (
 							<img src={stylist.image_url} alt={stylist.name} className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-xl" />
 						) : (
@@ -104,14 +108,14 @@ export default async function StylistProfilePage({ params }: { params: { id: str
 						</Card>
 					) : (
 						<div className="grid gap-4">
-							{reviews.map((review: any) => {
+							{reviews.map((review) => {
 								const serviceName = servicesMap[review.service_id] || "Service";
 								return (
 									<Card key={review.id} className="hover:shadow-sm transition-shadow">
 										<CardHeader className="pb-3">
 											<div className="flex items-center justify-between">
 												<div className="flex items-center gap-3">
-													<div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-blue-700 font-bold text-sm">{(review.customer_name || "?")[0].toUpperCase()}</div>
+													<div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-blue-700 font-bold text-sm">{(review.customer_name || "?")[0].toUpperCase()}</div>
 													<div>
 														<CardTitle className="text-base">{review.customer_name || "Anonymous"}</CardTitle>
 														<p className="text-xs text-slate-400 mt-0.5">
@@ -121,7 +125,7 @@ export default async function StylistProfilePage({ params }: { params: { id: str
 														</p>
 													</div>
 												</div>
-												<div className="flex items-center gap-1">{renderStars(review.rating)}</div>
+												<div className="flex items-center gap-1">{review.rating !== null && renderStars(review.rating)}</div>
 											</div>
 										</CardHeader>
 										{review.review && (

@@ -3,30 +3,16 @@
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { createAppointment } from "@/lib/actions/user";
 import { supabase } from "@/lib/supabase";
 import { TABLES } from "@/lib/tables";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ArrowLeft, CalendarIcon, Clock, Loader2, Scissors } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-
-interface Service {
-	id: string;
-	name: string;
-	description: string | null;
-	duration_minutes: number;
-	price: number;
-}
-
-interface Stylist {
-	id: string;
-	name: string;
-	image_url: string | null;
-	service_ids: string[];
-}
 
 export default function BookingPage() {
 	const params = useParams();
@@ -47,7 +33,7 @@ export default function BookingPage() {
 		queryFn: async () => {
 			const { data, error } = await supabase.from(TABLES.SERVICES).select("*").eq("id", serviceId).single();
 			if (error) throw error;
-			return data as Service;
+			return data;
 		},
 		enabled: !!serviceId,
 	});
@@ -57,7 +43,7 @@ export default function BookingPage() {
 		queryFn: async () => {
 			const { data, error } = await supabase.from(TABLES.STYLISTS).select("*").contains("service_ids", [serviceId]);
 			if (error) throw error;
-			return data as Stylist[];
+			return data;
 		},
 		enabled: !!serviceId,
 	});
@@ -89,9 +75,6 @@ export default function BookingPage() {
 		if (!selectedStylist || !date || !selectedTime) return;
 
 		try {
-			// Added dynamic import to avoid potential component mounting issues
-			const { createAppointment } = await import("@/app/actions");
-
 			await createAppointment({
 				serviceId: service.id,
 				stylistId: selectedStylist,
@@ -109,7 +92,7 @@ export default function BookingPage() {
 	return (
 		<div className="min-h-screen bg-slate-50 flex flex-col">
 			<main className="flex-1 container mx-auto px-4 py-8 max-w-4xl">
-				<Button variant="ghost" className="mb-6 -ml-4" onClick={() => router.push("/services")} disabled={isSubmitting}>
+				<Button variant="link" className="mb-6 -ml-4" onClick={() => router.push("/services")} disabled={isSubmitting}>
 					<ArrowLeft className="w-4 h-4 mr-2" /> Back to Services
 				</Button>
 
@@ -136,9 +119,9 @@ export default function BookingPage() {
 													<Scissors className="w-5 h-5 text-slate-400" />
 												</div>
 											)}
-											<div>
-												<h4 className="font-semibold">{stylist.name}</h4>
-												<p className="text-sm text-slate-500 whitespace-nowrap overflow-hidden text-ellipsis">Expert Stylist</p>
+											<div className="flex-1 min-w-0">
+												<h4 className="font-semibold truncate">{stylist.name}</h4>
+												<p className="text-sm text-slate-500 truncate">{stylist.description}</p>
 											</div>
 										</div>
 									))}
@@ -187,9 +170,12 @@ export default function BookingPage() {
 								</div>
 
 								<div className="space-y-3 pt-2">
-									<div className="flex items-center gap-3 text-sm">
-										<Scissors className="w-5 h-5 text-slate-400" />
-										<span>{selectedStylist ? availableStylists.find((s) => s.id === selectedStylist)?.name : "Stylist pending"}</span>
+									<div className="flex items-start gap-3 text-sm">
+										<Scissors className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
+										<div className="flex flex-col">
+											<span className="font-medium text-slate-900">{selectedStylist ? availableStylists.find((s) => s.id === selectedStylist)?.name : "Stylist pending"}</span>
+											<span className="text-slate-500 text-xs mt-0.5">{selectedStylist ? availableStylists.find((s) => s.id === selectedStylist)?.description : "Please select a stylist"}</span>
+										</div>
 									</div>
 									<div className="flex items-center gap-3 text-sm">
 										<CalendarIcon className="w-5 h-5 text-slate-400" />

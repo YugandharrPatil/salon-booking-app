@@ -1,29 +1,21 @@
 "use client";
 
-import { createStylist, deleteStylist, updateStylist } from "@/app/actions";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { createStylist, deleteStylist, updateStylist } from "@/lib/actions/admin";
 import { supabase } from "@/lib/supabase";
 import { TABLES } from "@/lib/tables";
+import type { Tables } from "@/types/database.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Edit2, Loader2, Scissors, Trash2, UserPlus } from "lucide-react";
 import { useState } from "react";
 
-interface Stylist {
-	id: string;
-	name: string;
-	image_url: string | null;
-	service_ids: string[];
-}
-
-interface Service {
-	id: string;
-	name: string;
-}
+type Stylist = Tables<"salon_stylists">;
+type Service = Tables<"salon_services">;
 
 export function AdminStylistsList() {
 	const queryClient = useQueryClient();
@@ -288,7 +280,7 @@ export function AdminStylistsList() {
 							<CardContent className="grow pt-4">
 								<Label className="text-xs text-slate-400 uppercase tracking-wider">Services</Label>
 								<div className="flex flex-wrap gap-1.5 mt-2">
-									{(stylist.service_ids || []).length === 0 ? (
+									{(stylist.service_ids || []).length === 0 || stylist.service_ids === null ? (
 										<span className="text-sm text-slate-400 italic">No services assigned</span>
 									) : (
 										getServiceNames(stylist.service_ids)

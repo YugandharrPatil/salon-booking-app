@@ -2,46 +2,47 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
 import { TABLES } from "@/lib/tables";
 import { useClerk, useSignIn, useUser } from "@clerk/nextjs";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Loader2, Lock, Scissors, User } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { Controller, useForm } from "react-hook-form";
+import * as z from "zod";
 
-interface Stylist {
-	id: string;
-	name: string;
-	image_url: string | null;
-	password: string | null;
-}
+const formSchema = z.object({
+	username: z.string().min(1, { message: "Username is required" }),
+	password: z.string().min(1, { message: "Password is required" }),
+});
 
 export default function StylistSignIn() {
 	const { signIn } = useSignIn() as any;
 	const { setActive } = useClerk() as any;
 	const { user, isLoaded: userLoaded } = useUser();
-	const [username, setUsername] = useState("");
-	const [password, setPassword] = useState("");
-	const [error, setError] = useState("");
-	const [loading, setLoading] = useState(false);
 	const router = useRouter();
 
-	// Fetch stylists from DB for the autofill cards
-	const [stylists, setStylists] = useState<Stylist[]>([]);
-	const [isLoadingStylists, setIsLoadingStylists] = useState(true);
+	const form = useForm<z.infer<typeof formSchema>>({
+		resolver: zodResolver(formSchema),
+		defaultValues: {
+			username: "",
+			password: "",
+		},
+	});
 
-	useEffect(() => {
-		async function fetchStylists() {
-			const { data, error } = await supabase.from(TABLES.STYLISTS).select("id, name, image_url, password").order("name", { ascending: true });
-			if (!error && data) {
-				setStylists(data as Stylist[]);
-			}
-			setIsLoadingStylists(false);
-		}
-		fetchStylists();
-	}, []);
+	// Fetch stylists from DB for the autofill cards
+	const { data: stylists = [], isLoading: isLoadingStylists } = useQuery({
+		queryKey: ["stylists"],
+		queryFn: async () => {
+			const { data, error } = await supabase.from(TABLES.STYLISTS).select("id, name, image_url, password, description").order("name", { ascending: true });
+			if (error) throw error;
+			return data;
+		},
+	});
 
 	useEffect(() => {
 		if (userLoaded && user) {
@@ -54,40 +55,35 @@ export default function StylistSignIn() {
 		}
 	}, [user, userLoaded, router]);
 
-	const handleSignIn = async (e: React.FormEvent) => {
-		e.preventDefault();
-		if (!signIn) return;
-
-		try {
-			setLoading(true);
-			setError("");
-
+	const signInMutation = useMutation({
+		mutationFn: async (values: z.infer<typeof formSchema>) => {
+			if (!signIn) throw new Error("Sign in not available");
 			const result = await signIn.create({
-				identifier: username,
-				password,
+				identifier: values.username,
+				password: values.password,
 				strategy: "password",
 			});
-
+			return result;
+		},
+		onSuccess: async (result) => {
 			const currentStatus = result?.status || signIn.status;
-
 			if (currentStatus === "complete") {
 				await setActive({ session: result?.createdSessionId || signIn.createdSessionId });
 				router.push("/stylist/dashboard");
 			} else {
 				console.error("SignIn Status fell through:", currentStatus);
-				setError(`Sign in incomplete. Status is: ${currentStatus}. Check Clerk dashboard settings (e.g., forced password change).`);
+				throw new Error(`Sign in incomplete. Status is: ${currentStatus}. Check Clerk dashboard settings (e.g., forced password change).`);
 			}
-		} catch (err: any) {
-			console.error(err);
-			setError(err.errors?.[0]?.message || "Invalid styling credentials");
-		} finally {
-			setLoading(false);
-		}
+		},
+	});
+
+	const onSubmit = (values: z.infer<typeof formSchema>) => {
+		signInMutation.mutate(values);
 	};
 
 	const autofill = (u: string, p: string) => {
-		setUsername(u);
-		setPassword(p);
+		form.setValue("username", u);
+		form.setValue("password", p);
 	};
 
 	return (
@@ -99,27 +95,45 @@ export default function StylistSignIn() {
 						<CardTitle className="text-2xl font-bold tracking-tight">Stylist Portal</CardTitle>
 						<CardDescription>Sign in to manage your appointments and schedule.</CardDescription>
 					</CardHeader>
-					<form onSubmit={handleSignIn}>
+					<form onSubmit={form.handleSubmit(onSubmit)}>
 						<CardContent className="space-y-4">
-							{error && <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm font-medium border border-red-200">{error}</div>}
-							<div className="space-y-2">
-								<Label htmlFor="username">Username</Label>
-								<div className="relative">
-									<User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-									<Input id="username" placeholder="e.g. neha_sharma" className="pl-9" value={username} onChange={(e) => setUsername(e.target.value)} required />
-								</div>
-							</div>
-							<div className="space-y-2">
-								<Label htmlFor="password">Password</Label>
-								<div className="relative">
-									<Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-									<Input id="password" type="password" className="pl-9" value={password} onChange={(e) => setPassword(e.target.value)} required />
-								</div>
-							</div>
+							{signInMutation.error && (
+								<div className="bg-red-50 text-red-600 p-3 rounded-md text-sm font-medium border border-red-200">{(signInMutation.error as any).errors?.[0]?.message || signInMutation.error.message || "Invalid styling credentials"}</div>
+							)}
+							<FieldGroup>
+								<Controller
+									name="username"
+									control={form.control}
+									render={({ field, fieldState }) => (
+										<Field data-invalid={fieldState.invalid}>
+											<FieldLabel htmlFor="username">Username</FieldLabel>
+											<div className="relative">
+												<User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+												<Input id="username" placeholder="e.g. neha_sharma" className="pl-9" aria-invalid={fieldState.invalid} {...field} />
+											</div>
+											{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+										</Field>
+									)}
+								/>
+								<Controller
+									name="password"
+									control={form.control}
+									render={({ field, fieldState }) => (
+										<Field data-invalid={fieldState.invalid}>
+											<FieldLabel htmlFor="password">Password</FieldLabel>
+											<div className="relative">
+												<Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+												<Input id="password" type="password" className="pl-9" aria-invalid={fieldState.invalid} {...field} />
+											</div>
+											{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+										</Field>
+									)}
+								/>
+							</FieldGroup>
 						</CardContent>
 						<CardFooter>
-							<Button className="w-full" type="submit" disabled={loading || !signIn}>
-								{loading ? "Signing in..." : "Sign In to Portal"}
+							<Button className="w-full" type="submit" disabled={signInMutation.isPending || !signIn}>
+								{signInMutation.isPending ? "Signing in..." : "Sign In to Portal"}
 							</Button>
 						</CardFooter>
 					</form>
@@ -156,7 +170,7 @@ export default function StylistSignIn() {
 											)}
 											<div>
 												<p className="font-semibold">{stylist.name}</p>
-												<p className="text-xs text-slate-500 font-mono">user: {stylist.id}</p>
+												<p className="text-xs text-slate-500 font-mono">{stylist.description}</p>
 											</div>
 										</div>
 										<Button variant="outline" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">

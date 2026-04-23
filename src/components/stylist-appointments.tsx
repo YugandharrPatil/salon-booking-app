@@ -1,29 +1,28 @@
 "use client";
 
+import { StylistCalendar } from "@/components/stylist-calendar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { StylistCalendar } from "@/components/stylist-calendar";
 import { supabase } from "@/lib/supabase";
 import { TABLES } from "@/lib/tables";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarIcon, Clock, Loader2, RefreshCw, User, LayoutList } from "lucide-react";
+import { CalendarIcon, Clock, LayoutList, Loader2, RefreshCw, User } from "lucide-react";
 import Link from "next/link";
 
-interface Service {
-	id: string;
-	name: string;
-	duration_minutes: number;
-}
+import { Tables } from "@/types/database.types";
+
+type Service = Tables<"salon_services">;
+type Appointment = Tables<"salon_appointments">;
 
 export function StylistAppointments({ username }: { username: string }) {
 	// Fetch services lookup map
 	const { data: servicesMap } = useQuery({
 		queryKey: ["services-map"],
 		queryFn: async () => {
-			const { data } = await supabase.from(TABLES.SERVICES).select("id, name, duration_minutes, price");
+			const { data } = await supabase.from(TABLES.SERVICES).select("*");
 			const map: Record<string, Service> = {};
-			(data || []).forEach((s: any) => {
+			(data || []).forEach((s: Service) => {
 				map[s.id] = s;
 			});
 			return map;
@@ -43,7 +42,7 @@ export function StylistAppointments({ username }: { username: string }) {
 			if (error && error.code !== "PGRST116") throw error;
 
 			return (data || [])
-				.map((apt: any) => ({
+				.map((apt: Appointment) => ({
 					id: apt.id,
 					customerName: apt.customer_name || "Unknown Customer",
 					serviceId: apt.service_id,

@@ -1,26 +1,20 @@
 "use client";
 
-import { createService, deleteService, updateService } from "@/app/actions";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { createService, deleteService, updateService } from "@/lib/actions/admin";
 import { supabase } from "@/lib/supabase";
 import { TABLES } from "@/lib/tables";
+import { Tables } from "@/types/database.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Clock, Edit2, Loader2, Plus, Scissors, Trash2 } from "lucide-react";
 import { useState } from "react";
 
-export interface Service {
-	id: string;
-	name: string;
-	description: string | null;
-	duration_minutes: number;
-	price: number;
-	image_url: string | null;
-}
+type Service = Tables<"salon_services">;
 
 export function AdminServicesList() {
 	const queryClient = useQueryClient();
@@ -211,8 +205,8 @@ export function AdminServicesList() {
 								</CardHeader>
 							)}
 
-							<CardContent className="flex-grow pt-4">
-								<p className="text-slate-600 text-sm line-clamp-2 min-h-[40px] mb-4">{service.description || "No description provided."}</p>
+							<CardContent className="grow pt-4">
+								<p className="text-slate-600 text-sm line-clamp-2 min-h-10 mb-4">{service.description || "No description provided."}</p>
 
 								<div className="flex items-center justify-between text-sm">
 									<div className="flex items-center text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg font-medium">

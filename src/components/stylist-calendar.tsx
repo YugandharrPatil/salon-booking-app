@@ -8,6 +8,7 @@ import { enUS } from "date-fns/locale";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import type { View } from "react-big-calendar";
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
@@ -24,24 +25,23 @@ const localizer = dateFnsLocalizer({
 	locales,
 });
 
-interface Service {
-	id: string;
-	name: string;
-	duration_minutes: number;
-}
+import { Tables } from "@/types/database.types";
+
+type Service = Tables<"salon_services">;
+type Appointment = Tables<"salon_appointments">;
 
 export function StylistCalendar({ username }: { username: string }) {
 	const router = useRouter();
-	const [view, setView] = useState<any>("week");
+	const [view, setView] = useState<View>("week");
 	const [date, setDate] = useState(new Date());
 
 	// Fetch services lookup map
 	const { data: servicesMap } = useQuery({
 		queryKey: ["services-map"],
 		queryFn: async () => {
-			const { data } = await supabase.from(TABLES.SERVICES).select("id, name, duration_minutes, price");
+			const { data } = await supabase.from(TABLES.SERVICES).select("*");
 			const map: Record<string, Service> = {};
-			(data || []).forEach((s: any) => {
+			(data || []).forEach((s: Service) => {
 				map[s.id] = s;
 			});
 			return map;
@@ -58,7 +58,7 @@ export function StylistCalendar({ username }: { username: string }) {
 			const { data, error } = await supabase.from(TABLES.APPOINTMENTS).select("*").ilike("stylist_id", username);
 			if (error && error.code !== "PGRST116") throw error;
 
-			return (data || []).map((apt: any) => {
+			return (data || []).map((apt: Appointment) => {
 				// Parse date and time into a single Date object for Calendar
 				const [hours, minutes] = apt.time.split(":");
 				const start = new Date(apt.date);
@@ -107,10 +107,10 @@ export function StylistCalendar({ username }: { username: string }) {
 				onView={(newView) => setView(newView)}
 				date={date}
 				onNavigate={(newDate) => setDate(newDate)}
-				onSelectEvent={(event: any) => {
+				onSelectEvent={(event) => {
 					router.push(`/stylist/dashboard/appointments/${event.id}`);
 				}}
-				eventPropGetter={(event: any) => {
+				eventPropGetter={(event) => {
 					const isPending = event.resource === "pending";
 					return {
 						className: isPending ? "bg-amber-100 border-l-4 border-l-amber-500 text-amber-900" : "bg-blue-100 border-l-4 border-l-blue-600 text-blue-900 border-none rounded-sm shadow-sm",
