@@ -23,11 +23,11 @@ export default async function StylistsPage() {
 	const ratingMap: Record<string, { total: number; count: number }> = {};
 	(ratings || []).forEach((r) => {
 		if (r.rating !== null) {
-			if (!ratingMap[r.stylist_id]) {
-				ratingMap[r.stylist_id] = { total: 0, count: 0 };
+			if (!ratingMap[r.stylistId]) {
+				ratingMap[r.stylistId] = { total: 0, count: 0 };
 			}
-			ratingMap[r.stylist_id].total += r.rating;
-			ratingMap[r.stylist_id].count += 1;
+			ratingMap[r.stylistId].total += r.rating;
+			ratingMap[r.stylistId].count += 1;
 		}
 	});
 
@@ -50,15 +50,15 @@ export default async function StylistsPage() {
 						{stylists.map((stylist) => {
 							const avgRating = ratingMap[stylist.id] ? (ratingMap[stylist.id].total / ratingMap[stylist.id].count).toFixed(1) : null;
 							const reviewCount = ratingMap[stylist.id]?.count || 0;
-							const serviceNames = (stylist.service_ids || []).map((id) => servicesMap[id]).filter(Boolean);
+							const serviceNames = (stylist.serviceIds || []).map((id) => servicesMap[id]).filter(Boolean);
 
 							return (
 								<Link key={stylist.id} href={`/stylists/${stylist.id}`} className="block group">
 									<Card className="flex flex-col h-full overflow-hidden hover:shadow-lg transition-all duration-300 group-hover:border-blue-200">
 										{/* Avatar section */}
 										<div className="relative h-52 bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
-											{stylist.image_url ? (
-												<img src={stylist.image_url} alt={stylist.name} className="w-28 h-28 rounded-full object-cover border-4 border-white shadow-lg group-hover:scale-105 transition-transform duration-300" />
+											{stylist.imageUrl ? (
+												<img src={stylist.imageUrl} alt={stylist.name} className="w-28 h-28 rounded-full object-cover border-4 border-white shadow-lg group-hover:scale-105 transition-transform duration-300" />
 											) : (
 												<div className="w-28 h-28 rounded-full bg-white/80 flex items-center justify-center border-4 border-white shadow-lg">
 													<Scissors className="w-10 h-10 text-slate-300" />

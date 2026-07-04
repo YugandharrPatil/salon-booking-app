@@ -159,7 +159,7 @@ export default function BookingPage() {
 								<div className="flex justify-between items-start border-b pb-4">
 									<div>
 										<h4 className="font-semibold">{service.name}</h4>
-										<p className="text-sm text-muted-foreground">{service.duration_minutes} mins</p>
+										<p className="text-sm text-muted-foreground">{service.durationMinutes} mins</p>
 									</div>
 									<p className="font-semibold">${service.price.toFixed(2)}</p>
 								</div>

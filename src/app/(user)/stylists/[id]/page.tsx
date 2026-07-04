@@ -53,8 +53,8 @@ export default async function StylistProfilePage({ params }: { params: { id: str
 				{/* Stylist Profile Header */}
 				<Card className="overflow-hidden mb-8">
 					<div className="relative bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50 pt-12 pb-16 flex flex-col items-center">
-						{stylist.image_url ? (
-							<img src={stylist.image_url} alt={stylist.name} className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-xl" />
+						{stylist.imageUrl ? (
+							<img src={stylist.imageUrl} alt={stylist.name} className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-xl" />
 						) : (
 							<div className="w-32 h-32 rounded-full bg-white/80 flex items-center justify-center border-4 border-white shadow-xl">
 								<Scissors className="w-12 h-12 text-slate-300" />
@@ -108,15 +108,15 @@ export default async function StylistProfilePage({ params }: { params: { id: str
 					) : (
 						<div className="grid gap-4">
 							{reviews.map((review) => {
-								const serviceName = servicesMap[review.service_id] || "Service";
+								const serviceName = servicesMap[review.serviceId] || "Service";
 								return (
 									<Card key={review.id} className="hover:shadow-sm transition-shadow">
 										<CardHeader className="pb-3">
 											<div className="flex items-center justify-between">
 												<div className="flex items-center gap-3">
-													<div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-blue-700 font-bold text-sm">{(review.customer_name || "?")[0].toUpperCase()}</div>
+													<div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-blue-700 font-bold text-sm">{(review.customerName || "?")[0].toUpperCase()}</div>
 													<div>
-														<CardTitle className="text-base">{review.customer_name || "Anonymous"}</CardTitle>
+														<CardTitle className="text-base">{review.customerName || "Anonymous"}</CardTitle>
 														<p className="text-xs text-slate-400 mt-0.5">
 															{new Date(review.date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
 															{" · "}
