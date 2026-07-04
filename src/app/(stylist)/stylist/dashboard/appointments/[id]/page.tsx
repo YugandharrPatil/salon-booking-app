@@ -1,6 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from "@/lib/supabase";
-import { TABLES } from "@/lib/tables";
+import { getAppointmentById, getServiceById } from "@/lib/actions/queries";
 import { currentUser } from "@clerk/nextjs/server";
 import { AlertCircle, CalendarIcon, ChevronLeft, Clock, Scissors, User } from "lucide-react";
 import Link from "next/link";
@@ -21,9 +20,9 @@ export default async function AppointmentDetailsPage({ params }: { params: { id:
 	const { id } = await params;
 
 	// Fetch appointment details
-	const { data: appointment, error } = await supabase.from(TABLES.APPOINTMENTS).select("*").eq("id", id).single();
+	const appointment = await getAppointmentById(id);
 
-	if (error || !appointment) {
+	if (!appointment) {
 		return (
 			<div className="min-h-[50vh] flex flex-col items-center justify-center space-y-4">
 				<AlertCircle className="w-12 h-12 text-red-500" />
@@ -37,12 +36,12 @@ export default async function AppointmentDetailsPage({ params }: { params: { id:
 	}
 
 	// Double check that the stylist actually owns this appointment
-	if (appointment.stylist_id.toLowerCase() !== user.username.toLowerCase()) {
+	if (appointment.stylistId.toLowerCase() !== user.username.toLowerCase()) {
 		redirect("/stylist/dashboard");
 	}
 
 	// Fetch service details from DB
-	const { data: service } = await supabase.from(TABLES.SERVICES).select("*").eq("id", appointment.service_id).single();
+	const service = await getServiceById(appointment.serviceId);
 
 	return (
 		<div className="max-w-3xl mx-auto space-y-6">
@@ -86,7 +85,7 @@ export default async function AppointmentDetailsPage({ params }: { params: { id:
 									<div className="p-2 bg-slate-100 object-cover text-slate-600 rounded-full">
 										<User className="w-5 h-5" />
 									</div>
-									<span className="font-medium text-lg">{appointment.customer_name || "Unknown Customer"}</span>
+									<span className="font-medium text-lg">{appointment.customerName || "Unknown Customer"}</span>
 								</div>
 							</div>
 						</div>
@@ -99,7 +98,7 @@ export default async function AppointmentDetailsPage({ params }: { params: { id:
 							</div>
 							<div className="flex items-center justify-between border-t border-slate-200 pt-4 mt-4">
 								<span className="text-slate-500">Duration</span>
-								<span className="font-medium text-slate-900">{service?.duration_minutes || "?"} minutes</span>
+								<span className="font-medium text-slate-900">{service?.durationMinutes || "?"} minutes</span>
 							</div>
 							<div className="flex items-center justify-between border-t border-slate-200 pt-4">
 								<span className="text-slate-500">Price</span>

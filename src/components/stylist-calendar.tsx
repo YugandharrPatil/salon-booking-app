@@ -1,7 +1,6 @@
 "use client";
 
-import { supabase } from "@/lib/supabase";
-import { TABLES } from "@/lib/tables";
+import { getAppointmentsForStylist, getServicesMap } from "@/lib/actions/queries";
 import { useQuery } from "@tanstack/react-query";
 import { format, getDay, parse, startOfWeek } from "date-fns";
 import { enUS } from "date-fns/locale";
@@ -25,10 +24,10 @@ const localizer = dateFnsLocalizer({
 	locales,
 });
 
-import { Tables } from "@/types/database.types";
+import type { salonAppointments, salonServices } from "@/db/schema";
 
-type Service = Tables<"salon_services">;
-type Appointment = Tables<"salon_appointments">;
+type Service = typeof salonServices.$inferSelect;
+type Appointment = typeof salonAppointments.$inferSelect;
 
 export function StylistCalendar({ username }: { username: string }) {
 	const router = useRouter();
@@ -39,12 +38,7 @@ export function StylistCalendar({ username }: { username: string }) {
 	const { data: servicesMap } = useQuery({
 		queryKey: ["services-map"],
 		queryFn: async () => {
-			const { data } = await supabase.from(TABLES.SERVICES).select("*");
-			const map: Record<string, Service> = {};
-			(data || []).forEach((s: Service) => {
-				map[s.id] = s;
-			});
-			return map;
+			return await getServicesMap();
 		},
 	});
 
@@ -55,18 +49,17 @@ export function StylistCalendar({ username }: { username: string }) {
 	} = useQuery({
 		queryKey: ["calendar-appointments", username],
 		queryFn: async () => {
-			const { data, error } = await supabase.from(TABLES.APPOINTMENTS).select("*").ilike("stylist_id", username);
-			if (error && error.code !== "PGRST116") throw error;
+			const data = await getAppointmentsForStylist(username);
 
-			return (data || []).map((apt: Appointment) => {
+			return data.map((apt: Appointment) => {
 				// Parse date and time into a single Date object for Calendar
 				const [hours, minutes] = apt.time.split(":");
 				const start = new Date(apt.date);
 				start.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0);
 
 				const end = new Date(start);
-				const service = servicesMap?.[apt.service_id];
-				const duration = service?.duration_minutes || 45;
+				const service = servicesMap?.[apt.serviceId];
+				const duration = service?.durationMinutes || 45;
 				end.setMinutes(start.getMinutes() + duration);
 
 				return {

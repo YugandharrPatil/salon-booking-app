@@ -8,18 +8,17 @@ import Link from "next/link";
 import ReviewDialog from "@/components/review-dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { deleteAppointment } from "@/lib/actions/user";
-import { supabase } from "@/lib/supabase";
-import { TABLES } from "@/lib/tables";
+import { getAppointmentsForUser, getServicesMap, getStylistsMap } from "@/lib/actions/queries";
 import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle, Loader2 } from "lucide-react";
 import { useState } from "react";
 
-import { Tables } from "@/types/database.types";
+import type { salonAppointments, salonServices, salonStylists } from "@/db/schema";
 
-type Appointment = Tables<"salon_appointments">;
-type Service = Tables<"salon_services">;
-type Stylist = Tables<"salon_stylists">;
+type Appointment = typeof salonAppointments.$inferSelect;
+type Service = typeof salonServices.$inferSelect;
+type Stylist = typeof salonStylists.$inferSelect;
 
 export function AppointmentList() {
 	const { user } = useUser();
@@ -33,24 +32,14 @@ export function AppointmentList() {
 	const { data: servicesMap } = useQuery({
 		queryKey: ["services-map"],
 		queryFn: async () => {
-			const { data } = await supabase.from(TABLES.SERVICES).select("*");
-			const map: Record<string, Service> = {};
-			(data || []).forEach((s) => {
-				map[s.id] = s;
-			});
-			return map;
+			return await getServicesMap();
 		},
 	});
 
 	const { data: stylistsMap } = useQuery({
 		queryKey: ["stylists-map"],
 		queryFn: async () => {
-			const { data } = await supabase.from(TABLES.STYLISTS).select("*");
-			const map: Record<string, Stylist> = {};
-			(data || []).forEach((s) => {
-				map[s.id] = s;
-			});
-			return map;
+			return await getStylistsMap();
 		},
 	});
 
@@ -62,13 +51,9 @@ export function AppointmentList() {
 		queryKey: ["client-appointments", user?.id],
 		enabled: !!user?.id,
 		queryFn: async () => {
-			const { data, error } = await supabase
-				.from(TABLES.APPOINTMENTS)
-				.select("*")
-				.eq("user_id", user?.id || "");
-			if (error && error.code !== "PGRST116") throw error;
+			const data = await getAppointmentsForUser(user?.id || "");
 
-			return ((data || []) as Appointment[]).sort((a, b) => {
+			return (data as Appointment[]).sort((a, b) => {
 				if (a.status === "pending" && b.status === "completed") return -1;
 				if (a.status === "completed" && b.status === "pending") return 1;
 				return 0;
@@ -117,8 +102,8 @@ export function AppointmentList() {
 	return (
 		<div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 			{appointments.map((apt: Appointment) => {
-				const service = servicesMap?.[apt.service_id];
-				const stylist = stylistsMap?.[apt.stylist_id];
+				const service = servicesMap?.[apt.serviceId];
+				const stylist = stylistsMap?.[apt.stylistId];
 
 				return (
 					<Card key={apt.id} className={`relative overflow-hidden border-t-4 shadow-sm hover:shadow-md transition-shadow ${apt.status === "completed" ? "border-t-slate-300 opacity-75" : "border-t-emerald-500"}`}>
@@ -127,8 +112,8 @@ export function AppointmentList() {
 						<CardHeader className="pb-3 border-b border-slate-50 bg-slate-50/50">
 							<CardTitle className="text-xl text-slate-800">{service?.name || "Unknown Service"}</CardTitle>
 							<CardDescription className="flex items-center gap-2 mt-1">
-								{stylist?.image_url ? (
-									<img src={stylist.image_url} alt={stylist.name} className="w-6 h-6 rounded-full object-cover" />
+								{stylist?.imageUrl ? (
+									<img src={stylist.imageUrl} alt={stylist.name} className="w-6 h-6 rounded-full object-cover" />
 								) : (
 									<div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center">
 										<Scissors className="w-3 h-3 text-slate-400" />
@@ -149,7 +134,7 @@ export function AppointmentList() {
 									<Clock className="w-4 h-4" />
 								</div>
 								<span className="font-medium text-slate-700">
-									{apt.time} ({service?.duration_minutes || "?"} mins)
+									{apt.time} ({service?.durationMinutes || "?"} mins)
 								</span>
 							</div>
 						</CardContent>
@@ -162,7 +147,7 @@ export function AppointmentList() {
 									disabled={deleteMutation.isPending}
 									onClick={() => {
 										setReviewAppointmentId(apt.id);
-										setReviewStylistId(apt.stylist_id);
+										setReviewStylistId(apt.stylistId);
 										setReviewStylistName(stylist?.name || "Stylist");
 									}}
 								>

@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { createAppointment } from "@/lib/actions/user";
-import { supabase } from "@/lib/supabase";
-import { TABLES } from "@/lib/tables";
+import { getAvailableStylistsForService, getServiceById } from "@/lib/actions/queries";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -31,9 +30,7 @@ export default function BookingPage() {
 	const { data: service, isLoading: isLoadingService } = useQuery({
 		queryKey: ["service", serviceId],
 		queryFn: async () => {
-			const { data, error } = await supabase.from(TABLES.SERVICES).select("*").eq("id", serviceId).single();
-			if (error) throw error;
-			return data;
+			return await getServiceById(serviceId);
 		},
 		enabled: !!serviceId,
 	});
@@ -41,9 +38,7 @@ export default function BookingPage() {
 	const { data: availableStylists = [], isLoading: isLoadingStylists } = useQuery({
 		queryKey: ["stylistsForService", serviceId],
 		queryFn: async () => {
-			const { data, error } = await supabase.from(TABLES.STYLISTS).select("*").contains("service_ids", [serviceId]);
-			if (error) throw error;
-			return data;
+			return await getAvailableStylistsForService(serviceId);
 		},
 		enabled: !!serviceId,
 	});
@@ -112,8 +107,8 @@ export default function BookingPage() {
 											onClick={() => setSelectedStylist(stylist.id)}
 											className={cn("p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center gap-4", selectedStylist === stylist.id ? "border-blue-500 bg-blue-50" : "border-slate-200 hover:border-blue-200 bg-white")}
 										>
-											{stylist.image_url ? (
-												<img src={stylist.image_url} alt={stylist.name} className="w-12 h-12 rounded-full object-cover" />
+											{stylist.imageUrl ? (
+												<img src={stylist.imageUrl} alt={stylist.name} className="w-12 h-12 rounded-full object-cover" />
 											) : (
 												<div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center">
 													<Scissors className="w-5 h-5 text-slate-400" />

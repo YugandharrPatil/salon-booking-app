@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from "@/lib/supabase";
-import { TABLES } from "@/lib/tables";
+import { getReviewsForStylist, getServices, getStylistById } from "@/lib/actions/queries";
 import { ChevronLeft, MessageSquare, Scissors, Star } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -12,22 +11,22 @@ export default async function StylistProfilePage({ params }: { params: { id: str
 	const { id } = await params;
 
 	// Fetch stylist
-	const { data: stylist, error } = await supabase.from(TABLES.STYLISTS).select("id, name, image_url, service_ids").eq("id", id).single();
+	const stylist = await getStylistById(id);
 
-	if (error || !stylist) {
+	if (!stylist) {
 		notFound();
 	}
 
 	// Fetch services for this stylist
-	const { data: allServices } = await supabase.from(TABLES.SERVICES).select("id, name");
+	const allServices = await getServices();
 	const servicesMap: Record<string, string> = {};
 	(allServices || []).forEach((s) => {
 		servicesMap[s.id] = s.name;
 	});
-	const stylistServices = (stylist.service_ids || []).map((sid: string) => servicesMap[sid]).filter(Boolean);
+	const stylistServices = (stylist.serviceIds || []).map((sid: string) => servicesMap[sid]).filter(Boolean);
 
 	// Fetch all reviews for this stylist (appointments with a rating)
-	const { data: reviews } = await supabase.from(TABLES.APPOINTMENTS).select("id, rating, review, customer_name, date, service_id").eq("stylist_id", id).not("rating", "is", null).order("date", { ascending: false });
+	const reviews = await getReviewsForStylist(id);
 
 	// Calculate average rating
 	const totalRating = (reviews || []).reduce((sum: number, r) => sum + (r.rating || 0), 0);

@@ -7,14 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createService, deleteService, updateService } from "@/lib/actions/admin";
-import { supabase } from "@/lib/supabase";
-import { TABLES } from "@/lib/tables";
-import { Tables } from "@/types/database.types";
+import { getServices } from "@/lib/actions/queries";
+import type { salonServices } from "@/db/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Clock, Edit2, Loader2, Plus, Scissors, Trash2 } from "lucide-react";
 import { useState } from "react";
 
-type Service = Tables<"salon_services">;
+type Service = typeof salonServices.$inferSelect;
 
 export function AdminServicesList() {
 	const queryClient = useQueryClient();
@@ -35,9 +34,7 @@ export function AdminServicesList() {
 	} = useQuery({
 		queryKey: ["admin-services"],
 		queryFn: async () => {
-			const { data, error } = await supabase.from(TABLES.SERVICES).select("*").order("name", { ascending: true });
-			if (error && error.code !== "PGRST116") throw error;
-			return data as Service[];
+			return await getServices();
 		},
 	});
 
@@ -97,9 +94,9 @@ export function AdminServicesList() {
 		setEditingService(service);
 		setName(service.name);
 		setDescription(service.description || "");
-		setDurationMinutes(service.duration_minutes);
+		setDurationMinutes(service.durationMinutes);
 		setPrice(service.price);
-		setImageUrl(service.image_url || "");
+		setImageUrl(service.imageUrl || "");
 	};
 
 	if (isLoading) {
@@ -192,9 +189,9 @@ export function AdminServicesList() {
 				<div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
 					{services.map((service) => (
 						<Card key={service.id} className="flex flex-col overflow-hidden hover:shadow-md transition-shadow">
-							{service.image_url ? (
+							{service.imageUrl ? (
 								<div className="h-48 w-full bg-slate-100 relative">
-									<img src={service.image_url} alt={service.name} className="w-full h-full object-cover" />
+									<img src={service.imageUrl} alt={service.name} className="w-full h-full object-cover" />
 									<div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
 										<h3 className="text-xl font-bold text-white shadow-sm">{service.name}</h3>
 									</div>
@@ -211,7 +208,7 @@ export function AdminServicesList() {
 								<div className="flex items-center justify-between text-sm">
 									<div className="flex items-center text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg font-medium">
 										<Clock className="w-4 h-4 mr-2 text-slate-500" />
-										{service.duration_minutes} mins
+										{service.durationMinutes} mins
 									</div>
 									<div className="text-lg font-bold text-emerald-600">${Number(service.price).toFixed(2)}</div>
 								</div>

@@ -1,40 +1,29 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from "@/lib/supabase";
-import { TABLES } from "@/lib/tables";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { getAllAppointments, getServicesMap, getStylistsMap } from "@/lib/actions/queries";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarIcon, Clock, Loader2, RefreshCw, Scissors, User } from "lucide-react";
-import type { Tables } from "@/types/database.types";
+import type { salonAppointments, salonServices, salonStylists } from "@/db/schema";
 
-type Appointment = Tables<"salon_appointments">;
-type Service = Tables<"salon_services">;
-type Stylist = Tables<"salon_stylists">;
+type Appointment = typeof salonAppointments.$inferSelect;
+type Service = typeof salonServices.$inferSelect;
+type Stylist = typeof salonStylists.$inferSelect;
 
 export function AdminDashboardList() {
 	// Fetch services and stylists lookup maps
 	const { data: servicesMap } = useQuery({
 		queryKey: ["services-map"],
 		queryFn: async () => {
-			const { data } = await supabase.from(TABLES.SERVICES).select("*");
-			const map: Record<string, Service> = {};
-			(data || []).forEach((s) => {
-				map[s.id] = s as Service;
-			});
-			return map;
+			return await getServicesMap();
 		},
 	});
 
 	const { data: stylistsMap } = useQuery({
 		queryKey: ["stylists-map"],
 		queryFn: async () => {
-			const { data } = await supabase.from(TABLES.STYLISTS).select("*");
-			const map: Record<string, Stylist> = {};
-			(data || []).forEach((s) => {
-				map[s.id] = s as Stylist;
-			});
-			return map;
+			return await getStylistsMap();
 		},
 	});
 
@@ -47,11 +36,7 @@ export function AdminDashboardList() {
 	} = useQuery({
 		queryKey: ["admin-all-appointments"],
 		queryFn: async () => {
-			// Super admin: No .eq filter, pulls everything
-			const { data, error } = await supabase.from(TABLES.APPOINTMENTS).select("*").order("date", { ascending: true });
-			if (error && error.code !== "PGRST116") throw error;
-
-			return (data || []) as Appointment[];
+			return await getAllAppointments();
 		},
 	});
 
@@ -92,8 +77,8 @@ export function AdminDashboardList() {
 
 			<div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
 				{allAppointments.map((apt: Appointment) => {
-					const service = servicesMap?.[apt.service_id];
-					const stylist = stylistsMap?.[apt.stylist_id];
+					const service = servicesMap?.[apt.serviceId];
+					const stylist = stylistsMap?.[apt.stylistId];
 
 					return (
 						<Card key={apt.id} className={`relative overflow-hidden border-t-4 shadow-sm hover:shadow-lg transition-all duration-300 ${apt.status === "completed" ? "border-t-slate-300 opacity-75" : "border-t-blue-600"}`}>
@@ -102,8 +87,8 @@ export function AdminDashboardList() {
 							<CardHeader className="pb-4 border-b border-slate-100 bg-slate-50/50">
 								<CardTitle className="text-xl text-slate-900">{service?.name || "Unknown Service"}</CardTitle>
 								<CardDescription className="flex items-center gap-3 mt-3">
-									{stylist?.image_url ? (
-										<img src={stylist.image_url} alt={stylist.name} className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm" />
+									{stylist?.imageUrl ? (
+										<img src={stylist.imageUrl} alt={stylist.name} className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm" />
 									) : (
 										<div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center border-2 border-white shadow-sm">
 											<Scissors className="w-3.5 h-3.5 text-slate-400" />
@@ -129,7 +114,7 @@ export function AdminDashboardList() {
 									<div>
 										<p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">Time</p>
 										<span className="font-medium text-slate-800">
-											{apt.time} <span className="text-slate-400 font-normal">({service?.duration_minutes || "?"}m)</span>
+											{apt.time} <span className="text-slate-400 font-normal">({service?.durationMinutes || "?"}m)</span>
 										</span>
 									</div>
 								</div>
@@ -139,7 +124,7 @@ export function AdminDashboardList() {
 									</div>
 									<div>
 										<p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">Assigned Client</p>
-										<span className="font-bold text-slate-900">{apt.customer_name || "Unknown Customer"}</span>
+										<span className="font-bold text-slate-900">{apt.customerName || "Unknown Customer"}</span>
 									</div>
 								</div>
 							</CardContent>

@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { supabase } from "@/lib/supabase";
-import { TABLES } from "@/lib/tables";
+import { getRatingsList, getServices, getStylists } from "@/lib/actions/queries";
 import { Scissors, Star } from "lucide-react";
 import Link from "next/link";
 
@@ -8,10 +7,10 @@ export const dynamic = "force-dynamic";
 
 export default async function StylistsPage() {
 	// Fetch all stylists
-	const { data: stylists } = await supabase.from(TABLES.STYLISTS).select("id, name, image_url, service_ids").order("name", { ascending: true });
+	const stylists = await getStylists();
 
 	// Fetch all services for names
-	const { data: services } = await supabase.from(TABLES.SERVICES).select("id, name");
+	const services = await getServices();
 
 	const servicesMap: Record<string, string> = {};
 	(services || []).forEach((s) => {
@@ -19,7 +18,7 @@ export default async function StylistsPage() {
 	});
 
 	// Fetch average ratings for all stylists from appointments
-	const { data: ratings } = await supabase.from(TABLES.APPOINTMENTS).select("stylist_id, rating").not("rating", "is", null);
+	const ratings = await getRatingsList();
 
 	const ratingMap: Record<string, { total: number; count: number }> = {};
 	(ratings || []).forEach((r) => {

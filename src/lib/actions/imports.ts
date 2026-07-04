@@ -1,6 +1,6 @@
-import { supabase } from "@/lib/supabase";
-import { TABLES } from "@/lib/tables";
+import { db } from "@/db/drizzle";
+import { salonAppointments, salonServices, salonStylists } from "@/db/schema";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
-export { currentUser, revalidatePath, supabase, TABLES };
+export { currentUser, db, revalidatePath, salonAppointments, salonServices, salonStylists };

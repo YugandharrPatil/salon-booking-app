@@ -4,28 +4,22 @@ import { StylistCalendar } from "@/components/stylist-calendar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { supabase } from "@/lib/supabase";
-import { TABLES } from "@/lib/tables";
+import { getAppointmentsForStylist, getServicesMap } from "@/lib/actions/queries";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarIcon, Clock, LayoutList, Loader2, RefreshCw, User } from "lucide-react";
 import Link from "next/link";
 
-import { Tables } from "@/types/database.types";
+import type { salonAppointments, salonServices } from "@/db/schema";
 
-type Service = Tables<"salon_services">;
-type Appointment = Tables<"salon_appointments">;
+type Service = typeof salonServices.$inferSelect;
+type Appointment = typeof salonAppointments.$inferSelect;
 
 export function StylistAppointments({ username }: { username: string }) {
 	// Fetch services lookup map
 	const { data: servicesMap } = useQuery({
 		queryKey: ["services-map"],
 		queryFn: async () => {
-			const { data } = await supabase.from(TABLES.SERVICES).select("*");
-			const map: Record<string, Service> = {};
-			(data || []).forEach((s: Service) => {
-				map[s.id] = s;
-			});
-			return map;
+			return await getServicesMap();
 		},
 	});
 
@@ -38,14 +32,13 @@ export function StylistAppointments({ username }: { username: string }) {
 	} = useQuery({
 		queryKey: ["appointments", username],
 		queryFn: async () => {
-			const { data, error } = await supabase.from(TABLES.APPOINTMENTS).select("*").ilike("stylist_id", username);
-			if (error && error.code !== "PGRST116") throw error;
+			const data = await getAppointmentsForStylist(username);
 
-			return (data || [])
+			return data
 				.map((apt: Appointment) => ({
 					id: apt.id,
-					customerName: apt.customer_name || "Unknown Customer",
-					serviceId: apt.service_id,
+					customerName: apt.customerName || "Unknown Customer",
+					serviceId: apt.serviceId,
 					date: apt.date,
 					time: apt.time,
 					status: apt.status,
@@ -122,7 +115,7 @@ export function StylistAppointments({ username }: { username: string }) {
 														<Clock className="w-4 h-4" />
 													</div>
 													<span className="font-medium text-slate-700">
-														{apt.time} ({service?.duration_minutes || "?"} mins)
+														{apt.time} ({service?.durationMinutes || "?"} mins)
 													</span>
 												</div>
 												<div className="flex items-center gap-3 text-slate-600">

@@ -1,36 +1,42 @@
 import { sql } from "drizzle-orm";
-import { integer, numeric, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-export const salonAppointments = pgTable("salon_appointments", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
+export const salonAppointments = sqliteTable("salon_appointments", {
+	id: text("id")
+		.primaryKey()
+		.notNull()
+		.$defaultFn(() => crypto.randomUUID()),
 	userId: text("user_id").notNull(),
 	serviceId: text("service_id").notNull(),
 	stylistId: text("stylist_id").notNull(),
-	date: text().notNull(),
-	time: text().notNull(),
-	status: text().default("pending"),
+	date: text("date").notNull(),
+	time: text("time").notNull(),
+	status: text("status").default("pending"),
 	customerName: text("customer_name"),
-	rating: integer(),
-	review: text(),
+	rating: integer("rating"),
+	review: text("review"),
 });
 
-export const salonServices = pgTable("salon_services", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	name: text().notNull(),
-	description: text(),
+export const salonServices = sqliteTable("salon_services", {
+	id: text("id")
+		.primaryKey()
+		.notNull()
+		.$defaultFn(() => crypto.randomUUID()),
+	name: text("name").notNull(),
+	description: text("description"),
 	durationMinutes: integer("duration_minutes").notNull(),
-	price: numeric({ precision: 10, scale: 2 }).default("0.00").notNull(),
+	price: real("price").default(0.00).notNull(),
 	imageUrl: text("image_url"),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
-		.default(sql`timezone('utc'::text, now())`)
+	createdAt: text("created_at")
+		.default(sql`(CURRENT_TIMESTAMP)`)
 		.notNull(),
 });
 
-export const salonStylists = pgTable("salon_stylists", {
-	id: text().primaryKey().notNull(),
-	name: text().notNull(),
+export const salonStylists = sqliteTable("salon_stylists", {
+	id: text("id").primaryKey().notNull(), // uses Clerk username as ID
+	name: text("name").notNull(),
 	imageUrl: text("image_url"),
-	serviceIds: uuid("service_ids").array().default([""]),
-	password: text(),
-	description: text().default("Expert Stylist"),
+	serviceIds: text("service_ids", { mode: "json" }).$type<string[]>().default([]),
+	password: text("password"),
+	description: text("description").default("Expert Stylist"),
 });

@@ -1,6 +1,7 @@
 "use server";
 
-import { currentUser, revalidatePath, supabase, TABLES } from "./imports";
+import { eq } from "drizzle-orm";
+import { currentUser, db, revalidatePath, salonServices, salonStylists } from "./imports";
 
 export async function createService(data: { name: string; description: string | null; duration_minutes: number; price: number; image_url: string | null }) {
 	const user = await currentUser();
@@ -9,18 +10,19 @@ export async function createService(data: { name: string; description: string | 
 	const isAdmin = user.publicMetadata?.role === "admin";
 	if (!isAdmin) throw new Error("Forbidden");
 
-	const { error } = await supabase.from(TABLES.SERVICES).insert({
-		name: data.name,
-		description: data.description,
-		duration_minutes: data.duration_minutes,
-		price: data.price,
-		image_url: data.image_url,
-	});
-
-	if (error) {
+	try {
+		await db.insert(salonServices).values({
+			name: data.name,
+			description: data.description,
+			durationMinutes: data.duration_minutes,
+			price: data.price,
+			imageUrl: data.image_url,
+		});
+	} catch (error) {
 		console.error("Failed to create service:", error);
 		throw new Error("Could not create service.");
 	}
+
 	revalidatePath("/admin/services");
 	revalidatePath("/services");
 }
@@ -32,21 +34,22 @@ export async function updateService(id: string, data: { name: string; descriptio
 	const isAdmin = user.publicMetadata?.role === "admin";
 	if (!isAdmin) throw new Error("Forbidden");
 
-	const { error } = await supabase
-		.from(TABLES.SERVICES)
-		.update({
-			name: data.name,
-			description: data.description,
-			duration_minutes: data.duration_minutes,
-			price: data.price,
-			image_url: data.image_url,
-		})
-		.eq("id", id);
-
-	if (error) {
+	try {
+		await db
+			.update(salonServices)
+			.set({
+				name: data.name,
+				description: data.description,
+				durationMinutes: data.duration_minutes,
+				price: data.price,
+				imageUrl: data.image_url,
+			})
+			.where(eq(salonServices.id, id));
+	} catch (error) {
 		console.error("Failed to update service:", error);
 		throw new Error("Could not update service.");
 	}
+
 	revalidatePath("/admin/services");
 	revalidatePath("/services");
 }
@@ -58,12 +61,13 @@ export async function deleteService(id: string) {
 	const isAdmin = user.publicMetadata?.role === "admin";
 	if (!isAdmin) throw new Error("Forbidden");
 
-	const { error } = await supabase.from(TABLES.SERVICES).delete().eq("id", id);
-
-	if (error) {
+	try {
+		await db.delete(salonServices).where(eq(salonServices.id, id));
+	} catch (error) {
 		console.error("Failed to delete service:", error);
 		throw new Error("Could not delete service.");
 	}
+
 	revalidatePath("/admin/services");
 	revalidatePath("/services");
 }
@@ -95,15 +99,15 @@ export async function createStylist(data: { username: string; name: string; pass
 	}
 
 	// 2. Insert the DB record using the username as id (always lowercased to match Clerk's username normalization)
-	const { error } = await supabase.from(TABLES.STYLISTS).insert({
-		id: data.username.toLowerCase(),
-		name: data.name,
-		password: data.password,
-		image_url: data.image_url,
-		service_ids: data.service_ids,
-	});
-
-	if (error) {
+	try {
+		await db.insert(salonStylists).values({
+			id: data.username.toLowerCase(),
+			name: data.name,
+			password: data.password,
+			imageUrl: data.image_url,
+			serviceIds: data.service_ids,
+		});
+	} catch (error) {
 		console.error("Failed to create stylist in DB:", error);
 		// Attempt to clean up the Clerk user we just created
 		try {
@@ -125,19 +129,20 @@ export async function updateStylist(id: string, data: { name: string; image_url:
 	const isAdmin = user.publicMetadata?.role === "admin";
 	if (!isAdmin) throw new Error("Forbidden");
 
-	const { error } = await supabase
-		.from(TABLES.STYLISTS)
-		.update({
-			name: data.name,
-			image_url: data.image_url,
-			service_ids: data.service_ids,
-		})
-		.eq("id", id);
-
-	if (error) {
+	try {
+		await db
+			.update(salonStylists)
+			.set({
+				name: data.name,
+				imageUrl: data.image_url,
+				serviceIds: data.service_ids,
+			})
+			.where(eq(salonStylists.id, id));
+	} catch (error) {
 		console.error("Failed to update stylist:", error);
 		throw new Error("Could not update stylist.");
 	}
+
 	revalidatePath("/admin/stylists");
 	revalidatePath("/stylists");
 }
@@ -149,10 +154,10 @@ export async function deleteStylist(id: string) {
 	const isAdmin = user.publicMetadata?.role === "admin";
 	if (!isAdmin) throw new Error("Forbidden");
 
-	// Delete from Supabase
-	const { error } = await supabase.from(TABLES.STYLISTS).delete().eq("id", id);
-
-	if (error) {
+	// Delete from DB using Drizzle
+	try {
+		await db.delete(salonStylists).where(eq(salonStylists.id, id));
+	} catch (error) {
 		console.error("Failed to delete stylist:", error);
 		throw new Error("Could not delete stylist.");
 	}

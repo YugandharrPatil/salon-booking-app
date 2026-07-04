@@ -7,15 +7,14 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createStylist, deleteStylist, updateStylist } from "@/lib/actions/admin";
-import { supabase } from "@/lib/supabase";
-import { TABLES } from "@/lib/tables";
-import type { Tables } from "@/types/database.types";
+import { getServices, getStylists } from "@/lib/actions/queries";
+import type { salonServices, salonStylists } from "@/db/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Edit2, Loader2, Scissors, Trash2, UserPlus } from "lucide-react";
 import { useState } from "react";
 
-type Stylist = Tables<"salon_stylists">;
-type Service = Tables<"salon_services">;
+type Stylist = typeof salonStylists.$inferSelect;
+type Service = typeof salonServices.$inferSelect;
 
 export function AdminStylistsList() {
 	const queryClient = useQueryClient();
@@ -39,9 +38,7 @@ export function AdminStylistsList() {
 	} = useQuery({
 		queryKey: ["admin-stylists"],
 		queryFn: async () => {
-			const { data, error } = await supabase.from(TABLES.STYLISTS).select("*").order("name", { ascending: true });
-			if (error && error.code !== "PGRST116") throw error;
-			return data as Stylist[];
+			return await getStylists();
 		},
 	});
 
@@ -49,9 +46,7 @@ export function AdminStylistsList() {
 	const { data: services } = useQuery({
 		queryKey: ["all-services"],
 		queryFn: async () => {
-			const { data, error } = await supabase.from(TABLES.SERVICES).select("id, name").order("name", { ascending: true });
-			if (error) throw error;
-			return data as Service[];
+			return await getServices();
 		},
 	});
 
@@ -119,8 +114,8 @@ export function AdminStylistsList() {
 	const handleEditClick = (stylist: Stylist) => {
 		setEditingStylist(stylist);
 		setName(stylist.name);
-		setImageUrl(stylist.image_url || "");
-		setSelectedServiceIds(stylist.service_ids || []);
+		setImageUrl(stylist.imageUrl || "");
+		setSelectedServiceIds(stylist.serviceIds || []);
 		setMutationError(null);
 	};
 
@@ -263,8 +258,8 @@ export function AdminStylistsList() {
 						<Card key={stylist.id} className="flex flex-col overflow-hidden hover:shadow-md transition-shadow">
 							<CardHeader className="bg-slate-50 border-b border-slate-100">
 								<div className="flex items-center gap-4">
-									{stylist.image_url ? (
-										<img src={stylist.image_url} alt={stylist.name} className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm" />
+									{stylist.imageUrl ? (
+										<img src={stylist.imageUrl} alt={stylist.name} className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm" />
 									) : (
 										<div className="w-14 h-14 rounded-full bg-slate-200 flex items-center justify-center border-2 border-white shadow-sm">
 											<Scissors className="w-6 h-6 text-slate-400" />
@@ -280,10 +275,10 @@ export function AdminStylistsList() {
 							<CardContent className="grow pt-4">
 								<Label className="text-xs text-slate-400 uppercase tracking-wider">Services</Label>
 								<div className="flex flex-wrap gap-1.5 mt-2">
-									{(stylist.service_ids || []).length === 0 || stylist.service_ids === null ? (
+									{(stylist.serviceIds || []).length === 0 || stylist.serviceIds === null ? (
 										<span className="text-sm text-slate-400 italic">No services assigned</span>
 									) : (
-										getServiceNames(stylist.service_ids)
+										getServiceNames(stylist.serviceIds)
 											.split(", ")
 											.map((name) => (
 												<span key={name} className="bg-blue-50 text-blue-700 text-xs px-2.5 py-1 rounded-full font-medium">

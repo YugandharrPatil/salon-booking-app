@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/lib/supabase";
-import { TABLES } from "@/lib/tables";
+import { getStylists } from "@/lib/actions/queries";
 import { useClerk, useSignIn, useUser } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -38,9 +37,7 @@ export default function StylistSignIn() {
 	const { data: stylists = [], isLoading: isLoadingStylists } = useQuery({
 		queryKey: ["stylists"],
 		queryFn: async () => {
-			const { data, error } = await supabase.from(TABLES.STYLISTS).select("id, name, image_url, password, description").order("name", { ascending: true });
-			if (error) throw error;
-			return data;
+			return await getStylists();
 		},
 	});
 
@@ -161,8 +158,8 @@ export default function StylistSignIn() {
 								<Card key={stylist.id} className="cursor-pointer hover:border-blue-300 transition-colors hover:bg-blue-50/50 group" onClick={() => autofill(stylist.id, stylist.password || "")}>
 									<div className="p-4 flex items-center justify-between">
 										<div className="flex items-center gap-3">
-											{stylist.image_url ? (
-												<img src={stylist.image_url} className="w-10 h-10 rounded-full object-cover border" alt={stylist.name} />
+											{stylist.imageUrl ? (
+												<img src={stylist.imageUrl} className="w-10 h-10 rounded-full object-cover border" alt={stylist.name} />
 											) : (
 												<div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center border">
 													<Scissors className="w-4 h-4 text-slate-400" />
